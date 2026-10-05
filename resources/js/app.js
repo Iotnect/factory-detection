@@ -22,6 +22,13 @@ const absence = [
   { ...people[4], id:"EMP-5277", name:"Kavitha Rao", dept:"Warehouse", location:"Post WH-11", time:"08:55:40", severity:"Critical", status:"Confirmed", confidence:95, type:"Absent at shift start", duration:"24m 03s" }
 ];
 
+const movementRecords = [
+  { id:"MOV-1042-01", time:"10:42:18", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"East Corridor", to:"Assembly Line A", camera:"CAM-04", duration:"00:46", confidence:96, event:"Zone transition", status:"Normal", image:IMAGES.camera1 },
+  { id:"MOV-1042-02", time:"10:17:03", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Packaging", to:"Restricted Storage", camera:"CAM-19", duration:"02:14", confidence:94, event:"Restricted entry", status:"Alert", image:IMAGES.camera3 },
+  { id:"MOV-1042-03", time:"09:36:41", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Quality Assurance", to:"East Corridor", camera:"CAM-08", duration:"06:12", confidence:93, event:"Extended stop", status:"Review", image:IMAGES.camera2 },
+  { id:"MOV-1042-04", time:"08:14:22", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Main Gate", to:"Quality Assurance", camera:"CAM-02", duration:"01:08", confidence:98, event:"Zone transition", status:"Normal", image:IMAGES.phone2 }
+];
+
 const pageMeta = {
   overview:"Command overview", phone:"Phone usage detection", absence:"Post & absence detection",
   camera:"Camera tracking", route:"Floorplan route tracking"
@@ -35,7 +42,7 @@ let toastTimer;
 
 function icon(name) { return `<span class="material-symbols-rounded">${name}</span>`; }
 function badge(value) {
-  const cls = /critical|unresolved|confirmed/i.test(value) ? "red" : /warning|review/i.test(value) ? "amber" : /resolved|online|normal/i.test(value) ? "green" : "";
+  const cls = /critical|unresolved|confirmed|alert/i.test(value) ? "red" : /warning|review/i.test(value) ? "amber" : /resolved|online|normal/i.test(value) ? "green" : "";
   return `<span class="badge ${cls}">${value}</span>`;
 }
 function showToast(message) {
@@ -54,7 +61,7 @@ function pageHead(kicker, title, copy, action="") {
 
 function renderOverview() {
   app.innerHTML = `<section class="page">
-    ${pageHead("Live operations", "Good morning, Aina.", "Hereâ€™s what is happening across Plant 01 right now.", `<button class="button" data-action="export">${icon("download")} Export report</button>`)}
+    ${pageHead("Live operations", "Good morning, Aina.", "Here’s what is happening across Plant 01 right now.", `<button class="button" data-action="export">${icon("download")} Export report</button>`)}
     <div class="metric-grid">
       ${metric("Employees on site", "248", "groups", "good", "+12 since 07:00")}
       ${metric("Active cameras", "24/25", "videocam", "", "96% coverage")}
@@ -82,7 +89,7 @@ function renderOverview() {
       <section class="panel">
         <div class="panel-head"><div class="panel-title">${icon("notifications_active")}<div><h2>Recent alerts</h2><p>Latest AI-detected events</p></div></div><button class="button small" data-page-jump="phone">View all</button></div>
         <div class="activity-list">
-          ${activity("smartphone", "Aiman Hakim", "Phone use Â· Assembly Line A", "2m ago", "")}
+          ${activity("smartphone", "Aiman Hakim", "Phone use · Assembly Line A", "2m ago", "")}
           ${activity("person_off", "Farah Nadia", "Post PK-07 left unattended", "7m ago", "amber")}
           ${activity("door_open", "Kavitha Rao", "Entered restricted path", "18m ago", "")}
           ${activity("verified", "Mei Ling", "Incident reviewed and resolved", "24m ago", "green")}
@@ -164,32 +171,32 @@ function renderCamera() {
     <div class="metric-grid">${metric("Online", "24", "videocam", "good", "96% availability")}${metric("Offline", "1", "videocam_off", "alert", "CAM-22 service due")}${metric("Tracked people", "18", "person_pin_circle")}${metric("Re-ID accuracy", "97.4%", "center_focus_strong", "good", "+0.6% this week")}</div>
     <section class="panel filter-panel"><form class="search-row" id="cameraSearch"><label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="cameraPerson" placeholder="Search employee name or ID"></label><select class="field"><option>All zones</option><option>Assembly</option><option>Packaging</option><option>Warehouse</option></select><select class="field"><option>All cameras</option><option>CAM-04</option><option>CAM-11</option><option>CAM-18</option></select><select class="field"><option>Live now</option><option>Last hour</option><option>Today</option></select><button class="button primary">${icon("my_location")} Track</button></form></section>
     <div class="camera-layout">
-      <section class="panel"><div class="panel-head"><div><h2>Live camera matrix</h2><p>Selected identity: Aiman Hakim Â· EMP-1042</p></div>${badge("Live tracking")}</div><div class="camera-grid">
-        ${cameraFeed(IMAGES.camera1,"CAM-04","Assembly Line A","A. Hakim Â· 96%")}
+      <section class="panel"><div class="panel-head"><div><h2>Live camera matrix</h2><p>Selected identity: Aiman Hakim · EMP-1042</p></div>${badge("Live tracking")}</div><div class="camera-grid">
+        ${cameraFeed(IMAGES.camera1,"CAM-04","Assembly Line A","A. Hakim · 96%")}
         ${cameraFeed(IMAGES.camera2,"CAM-07","CNC Bay","Last seen 2m ago")}
         ${cameraFeed(IMAGES.camera3,"CAM-11","Packing Zone","3 people detected")}
         ${cameraFeed(IMAGES.phone2,"CAM-18","Loading Bay","6 people detected")}
       </div></section>
       <aside class="panel"><div class="panel-head"><div><h2>Identity journey</h2><p>Camera-to-camera movement</p></div></div><div class="route-timeline">
-        ${routeEvent("10:42", "CAM-04 Â· Assembly Line A", "Identity confidence 96%")}
-        ${routeEvent("10:36", "CAM-03 Â· East Corridor", "Direction: west")}
-        ${routeEvent("10:29", "CAM-02 Â· Staff Entrance", "Identity confidence 94%")}
-        ${routeEvent("07:03", "CAM-01 Â· Main Gate", "Shift entry recorded")}
+        ${routeEvent("10:42", "CAM-04 · Assembly Line A", "Identity confidence 96%")}
+        ${routeEvent("10:36", "CAM-03 · East Corridor", "Direction: west")}
+        ${routeEvent("10:29", "CAM-02 · Staff Entrance", "Identity confidence 94%")}
+        ${routeEvent("07:03", "CAM-01 · Main Gate", "Shift entry recorded")}
       </div><button class="button primary" data-page-jump="route" style="width:100%;margin-top:16px">${icon("route")} View on floorplan</button></aside>
     </div>
   </section>`;
   $("#cameraSearch").addEventListener("submit", e => { e.preventDefault(); showToast($("#cameraPerson").value ? `Tracking ${$("#cameraPerson").value}` : "Showing all tracked employees"); });
 }
 function cameraFeed(src, id, place, label) {
-  return `<div class="camera-feed" data-toast="Opened ${id} live feed"><img src="${src}" alt="Factory camera feed at ${place}"><div class="camera-hud"><span><i class="live-dot"></i> ${id} Â· LIVE</span><span>10:44:26</span></div><div class="tracking-box"><span>${label}</span></div><div class="camera-bottom"><strong>${place}</strong>${icon("open_in_full")}</div></div>`;
+  return `<div class="camera-feed" data-toast="Opened ${id} live feed"><img src="${src}" alt="Factory camera feed at ${place}"><div class="camera-hud"><span><i class="live-dot"></i> ${id} · LIVE</span><span>10:44:26</span></div><div class="tracking-box"><span>${label}</span></div><div class="camera-bottom"><strong>${place}</strong>${icon("open_in_full")}</div></div>`;
 }
 
 function renderRoute() {
   app.innerHTML = `<section class="page">
-    ${pageHead("Spatial intelligence", "Floorplan route tracking", "Replay an employeeâ€™s movement and inspect evidence at every checkpoint.", `<button class="button" data-action="export">${icon("file_download")} Export route</button>`)}
-    <section class="panel filter-panel"><form class="search-row" id="routeSearch"><label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="routePerson" value="Aiman Hakim Â· EMP-1042" placeholder="Employee name or ID"></label><select class="field"><option>Floor 01</option><option>Floor 02</option></select><input class="field" type="date" value="2026-10-05"><select class="field"><option>07:00â€“15:00</option><option>15:00â€“23:00</option></select><button class="button primary">${icon("route")} Show route</button></form></section>
+    ${pageHead("Spatial intelligence", "Floorplan route tracking", "Replay an employee’s movement and inspect evidence at every checkpoint.", `<button class="button" data-action="export">${icon("file_download")} Export route</button>`)}
+    <section class="panel filter-panel"><form class="search-row" id="routeSearch"><label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="routePerson" value="Aiman Hakim · EMP-1042" placeholder="Employee name or ID"></label><select class="field"><option>Floor 01</option><option>Floor 02</option></select><input class="field" type="date" value="2026-10-05"><select class="field"><option>07:00–15:00</option><option>15:00–23:00</option></select><button class="button primary">${icon("route")} Show route</button></form></section>
     <div class="route-layout">
-      <section class="panel"><div class="panel-head"><div><h2>Plant 01 Â· Ground floor</h2><p>Route from 07:03 to 10:42 Â· 1.84 km</p></div><div class="legend"><span><i></i>Route</span><span><i style="background:var(--red)"></i>Alert</span></div></div>
+      <section class="panel"><div class="panel-head"><div><h2>Plant 01 · Ground floor</h2><p>Route from 07:03 to 10:42 · 1.84 km</p></div><div class="legend"><span><i></i>Route</span><span><i style="background:var(--red)"></i>Alert</span></div></div>
         <div class="floorplan">
           <svg viewBox="0 0 820 500" role="img" aria-label="Factory floorplan with employee route">
             <defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="#dcd7e7" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)"/>
@@ -205,29 +212,53 @@ function renderRoute() {
             <circle class="route-dot" cx="70" cy="430" r="10"/><circle class="route-dot" cx="270" cy="406" r="10"/><circle class="route-dot" cx="470" cy="282" r="10"/><circle class="route-dot" cx="340" cy="145" r="10"/><circle class="route-dot" cx="620" cy="120" r="10"/><circle class="route-alert" cx="660" cy="270" r="12"/>
             <text class="map-label" x="46" y="458">START 07:03</text><text class="map-label" x="676" y="274" fill="#c8475b">ALERT 10:17</text>
           </svg><div class="map-controls"><button class="icon-button" data-toast="Map zoomed in">${icon("add")}</button><button class="icon-button" data-toast="Map zoomed out">${icon("remove")}</button><button class="icon-button" data-toast="Map view reset">${icon("my_location")}</button></div>
-        </div><div class="playback"><button class="icon-button" id="routePlay">${icon("play_arrow")}</button><span class="mono">07:03</span><input id="routeRange" type="range" min="0" max="100" value="68"><span class="mono" id="routeTime">10:42</span><select class="field" style="width:80px;min-height:36px"><option>1Ã—</option><option>2Ã—</option><option>4Ã—</option></select></div>
+        </div><div class="playback"><button class="icon-button" id="routePlay">${icon("play_arrow")}</button><span class="mono">07:03</span><input id="routeRange" type="range" min="0" max="100" value="68"><span class="mono" id="routeTime">10:42</span><select class="field" style="width:80px;min-height:36px"><option>1×</option><option>2×</option><option>4×</option></select></div>
       </section>
-      <aside class="panel"><div class="employee" style="margin-bottom:18px"><span class="avatar">AH</span><span><strong>Aiman Hakim</strong><small>EMP-1042 Â· Assembly</small></span>${badge("On site")}</div>
+      <aside class="panel"><div class="employee" style="margin-bottom:18px"><span class="avatar">AH</span><span><strong>Aiman Hakim</strong><small>EMP-1042 · Assembly</small></span>${badge("On site")}</div>
         <div class="metric-grid" style="grid-template-columns:1fr 1fr"><div class="detail-block"><small>Distance</small><strong>1.84 km</strong></div><div class="detail-block"><small>Zones</small><strong>6</strong></div><div class="detail-block"><small>Stops</small><strong>4</strong></div><div class="detail-block"><small>Alerts</small><strong style="color:var(--red)">1</strong></div></div>
         <div class="panel-head"><div><h2>Route checkpoints</h2><p>Select a point to inspect evidence</p></div></div><div class="route-timeline">
-          ${routeEvent("10:42", "Assembly Line A", "Current position Â· CAM-04")}${routeEvent("10:17", "Restricted Storage", "Unauthorized boundary crossing")}${routeEvent("09:36", "East Corridor", "Stopped for 6m 12s")}${routeEvent("08:14", "Quality Assurance", "Checkpoint passed")}${routeEvent("07:03", "Main Gate", "Route started")}
+          ${routeEvent("10:42", "Assembly Line A", "Current position · CAM-04")}${routeEvent("10:17", "Restricted Storage", "Unauthorized boundary crossing")}${routeEvent("09:36", "East Corridor", "Stopped for 6m 12s")}${routeEvent("08:14", "Quality Assurance", "Checkpoint passed")}${routeEvent("07:03", "Main Gate", "Route started")}
         </div>
       </aside>
     </div>
+    ${renderMovementRecords()}
   </section>`;
   $("#routeSearch").addEventListener("submit", e => { e.preventDefault(); showToast(`Route loaded for ${$("#routePerson").value}`); });
   $("#routePlay").addEventListener("click", e => { e.currentTarget.classList.toggle("playing"); e.currentTarget.innerHTML = icon(e.currentTarget.classList.contains("playing") ? "pause" : "play_arrow"); showToast(e.currentTarget.classList.contains("playing") ? "Route playback started" : "Route playback paused"); });
   $("#routeRange").addEventListener("input", e => $("#routeTime").textContent = `${String(7 + Math.floor(e.target.value / 20)).padStart(2,"0")}:${String((e.target.value * 7) % 60).padStart(2,"0")}`);
+  $$('[data-movement-id]').forEach(button => button.addEventListener('click', () => openMovementEvidence(movementRecords.find(record => record.id === button.dataset.movementId))));
 }
 function routeEvent(time, title, copy) { return `<button class="route-event" data-toast="Opened evidence from ${time}" style="border:0;background-color:transparent;text-align:left;width:100%;cursor:pointer"><time>${time}</time><span><strong>${title}</strong><small>${copy}</small></span></button>`; }
+
+function renderMovementRecords() {
+  return `<section class="panel movement-records">
+    <div class="panel-head"><div class="panel-title">${icon("directions_walk")}<div><h2>Employee movement records</h2><p>AI-inferred movements generated from CCTV detections and re-identification.</p></div></div><div class="movement-record-actions"><span class="result-count">${movementRecords.length} records</span><button class="button small" data-action="export">${icon("download")} Export</button></div></div>
+    <div class="table-wrap"><table><thead><tr><th>Timestamp</th><th>Employee</th><th>Movement</th><th>Camera</th><th>Dwell / travel</th><th>AI confidence</th><th>Event</th><th>Status</th><th>Evidence</th></tr></thead><tbody>
+      ${movementRecords.map(record => `<tr><td><strong>${record.time}</strong><br><span class="mono">05 Oct 2026</span></td><td><div class="employee"><span class="avatar">AH</span><span><strong>${record.employee}</strong><small>${record.employeeId}</small></span></div></td><td><div class="movement-path"><span>${record.from}</span>${icon("arrow_forward")}<strong>${record.to}</strong></div></td><td class="mono">${record.camera}</td><td class="mono">${record.duration}</td><td><span class="confidence"><i style="--score:${record.confidence}%"></i><b>${record.confidence}%</b></span></td><td>${record.event}</td><td>${badge(record.status)}</td><td><button class="button small evidence-button" data-movement-id="${record.id}">${icon("smart_display")} View</button></td></tr>`).join("")}
+    </tbody></table></div>
+  </section>`;
+}
+
+function openMovementEvidence(record) {
+  if (!record) return;
+  $("#modalContent").innerHTML = `<div class="modal-inner"><div class="modal-title-row"><span class="monitor-icon">${icon("route")}</span><div><span class="status-label">Movement ${record.id}</span><h2 id="modalTitle">${record.from} to ${record.to}</h2><p>${record.employee} · ${record.employeeId}</p></div></div>
+    <div class="detail-grid"><div class="evidence"><img src="${record.image}" alt="CCTV movement evidence for ${record.employee}"><div class="evidence-overlay"><div class="evidence-tags"><span>REC · ${record.camera}</span><span>05 Oct 2026 · ${record.time}</span></div><button class="fake-player" id="videoPlay" aria-label="Play CCTV evidence">${icon("play_arrow")}</button><div class="video-controls">${icon("volume_up")}<i></i><span>00:08 / 00:24</span>${icon("fullscreen")}</div></div></div>
+      <div class="detail-stack"><div class="detail-block"><h3>AI movement inference</h3><div class="detail-list"><div><small>Employee</small><strong>${record.employee}</strong></div><div><small>Camera</small><strong>${record.camera}</strong></div><div><small>From zone</small><strong>${record.from}</strong></div><div><small>To zone</small><strong>${record.to}</strong></div><div><small>Travel / dwell time</small><strong>${record.duration}</strong></div><div><small>AI confidence</small><strong>${record.confidence}%</strong></div><div><small>Event type</small><strong>${record.event}</strong></div><div><small>Status</small><strong>${badge(record.status)}</strong></div></div></div>
+      <div class="detail-block"><h3>Inference source</h3><p class="movement-source">Generated from person detection, employee re-identification, camera timestamp, and zone-transition data.</p></div></div></div>
+    <div class="modal-actions"><button class="button primary" data-case-action="Full CCTV clip opened">${icon("smart_display")} Open full clip</button><button class="button" data-case-action="Checkpoint selected on floorplan">${icon("location_on")} Show checkpoint</button><button class="button" data-case-action="Movement record exported">${icon("download")} Export record</button></div></div>`;
+  $("#modalBackdrop").hidden = false;
+  document.body.style.overflow = "hidden";
+  $("#videoPlay").addEventListener("click", e => { e.currentTarget.classList.toggle("playing"); e.currentTarget.innerHTML = icon(e.currentTarget.classList.contains("playing") ? "pause" : "play_arrow"); });
+  $$('[data-case-action]').forEach(button => button.addEventListener('click', () => showToast(button.dataset.caseAction)));
+}
 
 function openIncident(record) {
   if (!record) record = people[0];
   const isAbsence = record.duration;
-  $("#modalContent").innerHTML = `<div class="modal-inner"><div class="modal-title-row"><span class="monitor-icon">${icon(isAbsence ? "person_off" : "smartphone")}</span><div><span class="status-label">Case ${record.id}-${record.time.replaceAll(":","")}</span><h2 id="modalTitle">${record.type}</h2><p>${record.name} Â· ${record.id}</p></div></div>
-    <div class="detail-grid"><div class="evidence"><img src="${record.image}" alt="Camera evidence for ${record.name}"><div class="evidence-overlay"><div class="evidence-tags"><span>â— REC Â· ${record.camera}</span><span>${record.date} Â· ${record.time}</span></div><button class="fake-player" id="videoPlay" aria-label="Play evidence">${icon("play_arrow")}</button><div class="video-controls">${icon("volume_up")}<i></i><span>00:18 / 00:52</span>${icon("fullscreen")}</div></div></div>
+  $("#modalContent").innerHTML = `<div class="modal-inner"><div class="modal-title-row"><span class="monitor-icon">${icon(isAbsence ? "person_off" : "smartphone")}</span><div><span class="status-label">Case ${record.id}-${record.time.replaceAll(":","")}</span><h2 id="modalTitle">${record.type}</h2><p>${record.name} · ${record.id}</p></div></div>
+    <div class="detail-grid"><div class="evidence"><img src="${record.image}" alt="Camera evidence for ${record.name}"><div class="evidence-overlay"><div class="evidence-tags"><span>● REC · ${record.camera}</span><span>${record.date} · ${record.time}</span></div><button class="fake-player" id="videoPlay" aria-label="Play evidence">${icon("play_arrow")}</button><div class="video-controls">${icon("volume_up")}<i></i><span>00:18 / 00:52</span>${icon("fullscreen")}</div></div></div>
       <div class="detail-stack"><div class="detail-block"><h3>Incident details</h3><div class="detail-list"><div><small>Employee</small><strong>${record.name}</strong></div><div><small>Department</small><strong>${record.dept}</strong></div><div><small>Location</small><strong>${record.location}</strong></div><div><small>Camera</small><strong>${record.camera}</strong></div><div><small>${isAbsence ? "Duration" : "AI confidence"}</small><strong>${isAbsence ? record.duration : record.confidence + "%"}</strong></div><div><small>Severity</small><strong>${badge(record.severity)}</strong></div></div></div>
-      <div class="detail-block"><h3>Case status</h3>${badge(record.status)}</div><textarea class="field notes" placeholder="Add supervisor notesâ€¦"></textarea></div></div>
+      <div class="detail-block"><h3>Case status</h3>${badge(record.status)}</div><textarea class="field notes" placeholder="Add supervisor notes…"></textarea></div></div>
     <div class="modal-actions"><button class="button primary" data-case-action="Confirmed violation">${icon("gavel")} Confirm violation</button><button class="button" data-case-action="Marked as false detection">${icon("close")} False detection</button><button class="button" data-case-action="Case resolved">${icon("task_alt")} Resolve case</button><button class="button" data-case-action="Report exported">${icon("download")} Export report</button></div></div>`;
   $("#modalBackdrop").hidden = false;
   document.body.style.overflow = "hidden";

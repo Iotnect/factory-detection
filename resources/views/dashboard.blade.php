@@ -51,9 +51,9 @@
     <div class="workspace">
       <header class="topbar">
         <button class="icon-button mobile-menu" id="menuToggle" aria-label="Toggle menu"><span class="material-symbols-rounded">menu</span></button>
-        <div class="topbar-title"><span class="eyebrow">Plant 01 Â· Shah Alam</span><strong id="headerTitle">Command overview</strong></div>
+        <div class="topbar-title"><span class="eyebrow">Plant 01 · Shah Alam</span><strong id="headerTitle">Command overview</strong></div>
         <div class="topbar-actions">
-          <div class="shift-chip"><span class="live-dot"></span><span><small>Current shift</small><strong>Morning Â· 07:00â€“15:00</strong></span></div>
+          <div class="shift-chip"><span class="live-dot"></span><span><small>Current shift</small><strong>Morning · 07:00–15:00</strong></span></div>
           <button class="icon-button notification-button" data-toast="You have 5 unread alerts" aria-label="Notifications"><span class="material-symbols-rounded">notifications</span><i>5</i></button>
           <span class="date-chip" id="currentDate"></span>
         </div>
