@@ -16,4 +16,16 @@ class LoginPageTest extends TestCase
             ->assertSee('name="password"', false)
             ->assertSee('Sign in');
     }
+
+    public function test_successful_login_stores_the_username_for_the_dashboard(): void
+    {
+        $response = $this->post(route('login.store'), [
+            'username' => config('demo.username'),
+            'password' => config('demo.password'),
+        ]);
+
+        $response->assertRedirectToRoute('dashboard')
+            ->assertSessionHas('demo_authenticated', true)
+            ->assertSessionHas('demo_username', config('demo.username'));
+    }
 }

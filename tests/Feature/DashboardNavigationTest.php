@@ -31,6 +31,19 @@ class DashboardNavigationTest extends TestCase
             ->assertSee(route('modules.floorplan-route-tracking'), false);
     }
 
+    public function test_dashboard_receives_the_authenticated_username(): void
+    {
+        $response = $this
+            ->withSession([
+                'demo_authenticated' => true,
+                'demo_username' => 'line.supervisor',
+            ])
+            ->get(route('dashboard'));
+
+        $response->assertOk()
+            ->assertSee('data-username="line.supervisor"', false);
+    }
+
     #[DataProvider('moduleRoutes')]
     public function test_authenticated_user_can_open_each_module_page(string $routeName, string $title): void
     {

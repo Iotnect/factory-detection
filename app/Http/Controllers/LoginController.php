@@ -39,7 +39,10 @@ class LoginController extends Controller
         }
 
         $request->session()->regenerate();
-        $request->session()->put('demo_authenticated', true);
+        $request->session()->put([
+            'demo_authenticated' => true,
+            'demo_username' => $credentials['username'],
+        ]);
 
         return redirect()->route('dashboard');
     }

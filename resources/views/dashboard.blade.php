@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Iotnect factory activity monitoring dashboard">
-  <title>Iotnect — Factory Monitoring</title>
+  <title>Iotnect - Factory Monitoring</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Manrope:wght@600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=swap" rel="stylesheet">
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body>
+<body data-username="{{ session('demo_username', config('demo.username', 'User')) }}">
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
       <a class="brand" href="#overview" aria-label="Iotnect dashboard">
@@ -51,9 +51,9 @@
     <div class="workspace">
       <header class="topbar">
         <button class="icon-button mobile-menu" id="menuToggle" aria-label="Toggle menu"><span class="material-symbols-rounded">menu</span></button>
-        <div class="topbar-title"><span class="eyebrow">Plant 01 · Shah Alam</span><strong id="headerTitle">Command overview</strong></div>
+        <div class="topbar-title"><span class="eyebrow">Plant 01 &middot; Shah Alam</span><strong id="headerTitle">Command overview</strong></div>
         <div class="topbar-actions">
-          <div class="shift-chip"><span class="live-dot"></span><span><small>Current shift</small><strong>Morning · 07:00–15:00</strong></span></div>
+          <div class="shift-chip"><span class="live-dot"></span><span><small>Current shift</small><strong>Morning &middot; 07:00&ndash;15:00</strong></span></div>
           <button class="icon-button notification-button" data-toast="You have 5 unread alerts" aria-label="Notifications"><span class="material-symbols-rounded">notifications</span><i>5</i></button>
           <span class="date-chip" id="currentDate"></span>
         </div>
