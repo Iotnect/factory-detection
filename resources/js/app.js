@@ -1,32 +1,23 @@
-const IMAGES = {
-  phone: "https://lh3.googleusercontent.com/aida-public/AB6AXuDFsOT11Dsckd48PzDRV1aByWS-GtPT2imoLp7dRxsyYoE-S0SBNeb9KHWDEwNaiYlNToUCZ-t_uZVa_C9F3Knt2pRqUsgQs_5fc747OTO5P7vX06Oi80enmV4D1LWIUges4vLXnysznfTCGSeZqIhzpXTFT8vgWzf_YK8CtHMDbBgFm35b79Nezag6JxRlK3TRWUEFebZ-VmRhSNiTlrF2AhwWUhty2afxiZINDsuc9N_QpGXux2t5UQ",
-  phone2: "https://lh3.googleusercontent.com/aida-public/AB6AXuAUg-nXyFJz8rKZojMSmZeCAYoycbA14ZGuqAH7ALiG_QL7Q2K1Zd8JpbTfNqdf7HRrymbay3vjV4p3s-K9B4PS-nrzTxNCwcjp4wUuX07CWyUTdaiqiqzc7wBT7uD3c299qOFNat9MIMkoEe0EkXLq9Gfdir7kNB54a9be49rHq864oxDmgZEXS-cv5lUlwVx7q974Ky7CCLyKsPt9NfK97Kh_J-S2IkUrnnkRbRPVkjORYzzuVIAwiA",
-  absence: "https://lh3.googleusercontent.com/aida-public/AB6AXuDfxRHMA3di2VJ1D4Fu_qfZ2cdNFLH5S6YRP0iEt4Z1i3W9TwB9s5_96mkPKtGD_q7bGn1YrMA_PlMOi74okcvLS2PGBL4J2NnF2XKUW-X_KXg4qqoN-PaGBMfClCkCxCiIVo2_QGOrkDk62hOBKzCbiWO-g9xEQEK6gDPRZk0Gya-ZsIE_3xSgMml5bOeneKzxVutqNkTYC_1am32KbOl_1eTfxVS4d3M__QzM3lms1c1Be8QujxHqNw",
-  camera1: "https://lh3.googleusercontent.com/aida-public/AB6AXuAstWv0ekind2md339NnaeMIaWmnCfzifYXzbkYjd4fEJFdW3dI8coYyYbzBxdOXOTKKeAMLYmCbktl8rRoJdxWoOT0JjPU9HjzZjU7sygWS2BQ4UBRVGCHCJpbwG7_JXFWh7WNhh9ADJZ7yh0aqB6ja7mawpVBeOZwnLPIk2FwLjosG-6SLss8aENih5THBmGnH2tMxAIUzm0oJRO6Ugv5FA0r4qoDZ4KgGdfh-T4OvvSv7FhpueDD0Q",
-  camera2: "https://lh3.googleusercontent.com/aida-public/AB6AXuA3-Co6XF0ZVYNFFwG_J_z5gLZKoGOLPnreTY8oPNmOXIuDXBiGWQJ9VcEdsWK2VB-Ozht3deaChkzmjt1R_Gi9U0Ra-NOtdX7qe0DfAV1rDcPKjFcStixfHghOHHglWexJFFgZpq9ce1LChZ2wfwB_LfWaiPlI4lnNWZ_YUebS8np3tRKAvuDL3eFMbMkYFUfyurmCnIIjQoySwXPPbuuMqBSbZ-Qymg5SPXdTci_o6OJ9ucLyyavB9A",
-  camera3: "https://lh3.googleusercontent.com/aida-public/AB6AXuCWGRA1eqlgEhDArKhrqstzPxR54fCgTs6HUIwfsikU7ffOUuKrb3jRMAFnKulcDf6Doki90nt0VJV0V0KayW0DEAbIHG2Vzwtu2_NYECCzd-jjOgJB43SWeJV9ks71J9CYgyaoLR5LQNSlfNZA2-1NB90aXkDPcCbdPXKd3eA0cfwi7HAIExwBaiIS1leqN3L285MEBArRHCucKoAdPkeS7o1QyqAOQ3c1Xu2dTsZxGpq4F0cpJ9G6FQ"
-};
-
 const people = [
-  { id:"EMP-1042", name:"Aiman Hakim", dept:"Assembly", location:"Assembly Line A", camera:"CAM-04", time:"10:42:18", date:"05 Oct 2026", severity:"Critical", status:"Unresolved", confidence:96, type:"Phone usage", image:IMAGES.phone },
-  { id:"EMP-2087", name:"Nur Izzati", dept:"Packaging", location:"Packing Zone 2", camera:"CAM-11", time:"10:31:04", date:"05 Oct 2026", severity:"Warning", status:"Under review", confidence:91, type:"Phone usage", image:IMAGES.phone2 },
-  { id:"EMP-3184", name:"Daniel Wong", dept:"Machining", location:"CNC Bay 4", camera:"CAM-07", time:"09:58:46", date:"05 Oct 2026", severity:"Critical", status:"Confirmed", confidence:98, type:"Phone usage", image:IMAGES.camera1 },
-  { id:"EMP-4019", name:"Siti Aminah", dept:"Quality", location:"QA Station 1", camera:"CAM-15", time:"09:17:32", date:"05 Oct 2026", severity:"Warning", status:"Resolved", confidence:88, type:"Phone usage", image:IMAGES.camera2 },
-  { id:"EMP-5331", name:"Raj Kumar", dept:"Warehouse", location:"Loading Bay", camera:"CAM-18", time:"08:49:15", date:"05 Oct 2026", severity:"Warning", status:"Under review", confidence:93, type:"Phone usage", image:IMAGES.camera3 }
+  { id:"EMP-1042", name:"Aiman Hakim", dept:"Assembly", location:"Assembly Line A", camera:"CAM-04", time:"10:42:18", date:"05 Oct 2026", severity:"Critical", status:"Unresolved", confidence:96, type:"Phone usage" },
+  { id:"EMP-2087", name:"Nur Izzati", dept:"Packaging", location:"Packing Zone 2", camera:"CAM-11", time:"10:31:04", date:"05 Oct 2026", severity:"Warning", status:"Under review", confidence:91, type:"Phone usage" },
+  { id:"EMP-3184", name:"Daniel Wong", dept:"Machining", location:"CNC Bay 4", camera:"CAM-07", time:"09:58:46", date:"05 Oct 2026", severity:"Critical", status:"Confirmed", confidence:98, type:"Phone usage" },
+  { id:"EMP-4019", name:"Siti Aminah", dept:"Quality", location:"QA Station 1", camera:"CAM-15", time:"09:17:32", date:"05 Oct 2026", severity:"Warning", status:"Resolved", confidence:88, type:"Phone usage" },
+  { id:"EMP-5331", name:"Raj Kumar", dept:"Warehouse", location:"Loading Bay", camera:"CAM-18", time:"08:49:15", date:"05 Oct 2026", severity:"Warning", status:"Under review", confidence:93, type:"Phone usage" }
 ];
 
 const absence = [
-  { ...people[1], id:"EMP-2208", name:"Farah Nadia", dept:"Packaging", location:"Post PK-07", camera:"CAM-12", time:"10:36:20", severity:"Critical", status:"Unresolved", confidence:97, type:"Post left for 18 min", duration:"18m 42s", image:IMAGES.absence },
+  { ...people[1], id:"EMP-2208", name:"Farah Nadia", dept:"Packaging", location:"Post PK-07", camera:"CAM-12", time:"10:36:20", severity:"Critical", status:"Unresolved", confidence:97, type:"Post left for 18 min", duration:"18m 42s" },
   { ...people[2], id:"EMP-3390", name:"Harith Iskandar", dept:"Machining", location:"Post MC-04", time:"10:11:06", severity:"Warning", status:"Under review", confidence:92, type:"Late return", duration:"11m 08s" },
   { ...people[3], id:"EMP-4416", name:"Mei Ling", dept:"Quality", location:"Post QA-02", time:"09:42:51", severity:"Warning", status:"Resolved", confidence:89, type:"Post left for 7 min", duration:"07m 16s" },
   { ...people[4], id:"EMP-5277", name:"Kavitha Rao", dept:"Warehouse", location:"Post WH-11", time:"08:55:40", severity:"Critical", status:"Confirmed", confidence:95, type:"Absent at shift start", duration:"24m 03s" }
 ];
 
 const movementRecords = [
-  { id:"MOV-1042-01", time:"10:42:18", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"East Corridor", to:"Assembly Line A", camera:"CAM-04", duration:"00:46", confidence:96, event:"Zone transition", status:"Normal", image:IMAGES.camera1 },
-  { id:"MOV-1042-02", time:"10:17:03", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Packaging", to:"Restricted Storage", camera:"CAM-19", duration:"02:14", confidence:94, event:"Restricted entry", status:"Alert", image:IMAGES.camera3 },
-  { id:"MOV-1042-03", time:"09:36:41", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Quality Assurance", to:"East Corridor", camera:"CAM-08", duration:"06:12", confidence:93, event:"Extended stop", status:"Review", image:IMAGES.camera2 },
-  { id:"MOV-1042-04", time:"08:14:22", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Main Gate", to:"Quality Assurance", camera:"CAM-02", duration:"01:08", confidence:98, event:"Zone transition", status:"Normal", image:IMAGES.phone2 }
+  { id:"MOV-1042-01", time:"10:42:18", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"East Corridor", to:"Assembly Line A", camera:"CAM-04", duration:"00:46", confidence:96, event:"Zone transition", status:"Normal" },
+  { id:"MOV-1042-02", time:"10:17:03", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Packaging", to:"Restricted Storage", camera:"CAM-19", duration:"02:14", confidence:94, event:"Restricted entry", status:"Alert" },
+  { id:"MOV-1042-03", time:"09:36:41", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Quality Assurance", to:"East Corridor", camera:"CAM-08", duration:"06:12", confidence:93, event:"Extended stop", status:"Review" },
+  { id:"MOV-1042-04", time:"08:14:22", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Main Gate", to:"Quality Assurance", camera:"CAM-02", duration:"01:08", confidence:98, event:"Zone transition", status:"Normal" }
 ];
 
 const pageMeta = {
@@ -42,6 +33,7 @@ let currentPage = "overview";
 let toastTimer;
 
 function icon(name) { return `<span class="material-symbols-rounded">${name}</span>`; }
+function noFootage() { return `<div class="footage-empty">${icon("videocam_off")}<p>No footage available at the moment</p></div>`; }
 function badge(value) {
   const cls = /critical|unresolved|confirmed|alert/i.test(value) ? "red" : /warning|review/i.test(value) ? "amber" : /resolved|online|normal/i.test(value) ? "green" : "";
   return `<span class="badge ${cls}">${value}</span>`;
@@ -173,10 +165,10 @@ function renderCamera() {
     <section class="panel filter-panel"><form class="search-row" id="cameraSearch"><label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="cameraPerson" placeholder="Search employee name or ID"></label><select class="field"><option>All zones</option><option>Assembly</option><option>Packaging</option><option>Warehouse</option></select><select class="field"><option>All cameras</option><option>CAM-04</option><option>CAM-11</option><option>CAM-18</option></select><select class="field"><option>Live now</option><option>Last hour</option><option>Today</option></select><button class="button primary">${icon("my_location")} Track</button></form></section>
     <div class="camera-layout">
       <section class="panel"><div class="panel-head"><div><h2>Live camera matrix</h2><p>Selected identity: Aiman Hakim &middot; EMP-1042</p></div>${badge("Live tracking")}</div><div class="camera-grid">
-        ${cameraFeed(IMAGES.camera1,"CAM-04","Assembly Line A","A. Hakim &middot; 96%")}
-        ${cameraFeed(IMAGES.camera2,"CAM-07","CNC Bay","Last seen 2m ago")}
-        ${cameraFeed(IMAGES.camera3,"CAM-11","Packing Zone","3 people detected")}
-        ${cameraFeed(IMAGES.phone2,"CAM-18","Loading Bay","6 people detected")}
+        ${cameraFeed()}
+        ${cameraFeed()}
+        ${cameraFeed()}
+        ${cameraFeed()}
       </div></section>
       <aside class="panel"><div class="panel-head"><div><h2>Identity journey</h2><p>Camera-to-camera movement</p></div></div><div class="route-timeline">
         ${routeEvent("10:42", "CAM-04 &middot; Assembly Line A", "Identity confidence 96%")}
@@ -188,8 +180,8 @@ function renderCamera() {
   </section>`;
   $("#cameraSearch").addEventListener("submit", e => { e.preventDefault(); showToast($("#cameraPerson").value ? `Tracking ${$("#cameraPerson").value}` : "Showing all tracked employees"); });
 }
-function cameraFeed(src, id, place, label) {
-  return `<div class="camera-feed" data-toast="Opened ${id} live feed"><img src="${src}" alt="Factory camera feed at ${place}"><div class="camera-hud"><span><i class="live-dot"></i> ${id} &middot; LIVE</span><span>10:44:26</span></div><div class="tracking-box"><span>${label}</span></div><div class="camera-bottom"><strong>${place}</strong>${icon("open_in_full")}</div></div>`;
+function cameraFeed() {
+  return `<div class="camera-feed">${noFootage()}</div>`;
 }
 
 function renderRoute() {
@@ -243,13 +235,12 @@ function renderMovementRecords() {
 function openMovementEvidence(record) {
   if (!record) return;
   $("#modalContent").innerHTML = `<div class="modal-inner"><div class="modal-title-row"><span class="monitor-icon">${icon("route")}</span><div><span class="status-label">Movement ${record.id}</span><h2 id="modalTitle">${record.from} to ${record.to}</h2><p>${record.employee} &middot; ${record.employeeId}</p></div></div>
-    <div class="detail-grid"><div class="evidence"><img src="${record.image}" alt="CCTV movement evidence for ${record.employee}"><div class="evidence-overlay"><div class="evidence-tags"><span>REC &middot; ${record.camera}</span><span>05 Oct 2026 &middot; ${record.time}</span></div><button class="fake-player" id="videoPlay" aria-label="Play CCTV evidence">${icon("play_arrow")}</button><div class="video-controls">${icon("volume_up")}<i></i><span>00:08 / 00:24</span>${icon("fullscreen")}</div></div></div>
+    <div class="detail-grid"><div class="evidence">${noFootage()}</div>
       <div class="detail-stack"><div class="detail-block"><h3>AI movement inference</h3><div class="detail-list"><div><small>Employee</small><strong>${record.employee}</strong></div><div><small>Camera</small><strong>${record.camera}</strong></div><div><small>From zone</small><strong>${record.from}</strong></div><div><small>To zone</small><strong>${record.to}</strong></div><div><small>Travel / dwell time</small><strong>${record.duration}</strong></div><div><small>AI confidence</small><strong>${record.confidence}%</strong></div><div><small>Event type</small><strong>${record.event}</strong></div><div><small>Status</small><strong>${badge(record.status)}</strong></div></div></div>
       <div class="detail-block"><h3>Inference source</h3><p class="movement-source">Generated from person detection, employee re-identification, camera timestamp, and zone-transition data.</p></div></div></div>
-    <div class="modal-actions"><button class="button primary" data-case-action="Full CCTV clip opened">${icon("smart_display")} Open full clip</button><button class="button" data-case-action="Checkpoint selected on floorplan">${icon("location_on")} Show checkpoint</button><button class="button" data-case-action="Movement record exported">${icon("download")} Export record</button></div></div>`;
+    <div class="modal-actions"><button class="button primary" data-case-action="Checkpoint selected on floorplan">${icon("location_on")} Show checkpoint</button><button class="button" data-case-action="Movement record exported">${icon("download")} Export record</button></div></div>`;
   $("#modalBackdrop").hidden = false;
   document.body.style.overflow = "hidden";
-  $("#videoPlay").addEventListener("click", e => { e.currentTarget.classList.toggle("playing"); e.currentTarget.innerHTML = icon(e.currentTarget.classList.contains("playing") ? "pause" : "play_arrow"); });
   $$('[data-case-action]').forEach(button => button.addEventListener('click', () => showToast(button.dataset.caseAction)));
 }
 
@@ -257,13 +248,12 @@ function openIncident(record) {
   if (!record) record = people[0];
   const isAbsence = record.duration;
   $("#modalContent").innerHTML = `<div class="modal-inner"><div class="modal-title-row"><span class="monitor-icon">${icon(isAbsence ? "person_off" : "smartphone")}</span><div><span class="status-label">Case ${record.id}-${record.time.replaceAll(":","")}</span><h2 id="modalTitle">${record.type}</h2><p>${record.name} &middot; ${record.id}</p></div></div>
-    <div class="detail-grid"><div class="evidence"><img src="${record.image}" alt="Camera evidence for ${record.name}"><div class="evidence-overlay"><div class="evidence-tags"><span>&#9679; REC &middot; ${record.camera}</span><span>${record.date} &middot; ${record.time}</span></div><button class="fake-player" id="videoPlay" aria-label="Play evidence">${icon("play_arrow")}</button><div class="video-controls">${icon("volume_up")}<i></i><span>00:18 / 00:52</span>${icon("fullscreen")}</div></div></div>
+    <div class="detail-grid"><div class="evidence">${noFootage()}</div>
       <div class="detail-stack"><div class="detail-block"><h3>Incident details</h3><div class="detail-list"><div><small>Employee</small><strong>${record.name}</strong></div><div><small>Department</small><strong>${record.dept}</strong></div><div><small>Location</small><strong>${record.location}</strong></div><div><small>Camera</small><strong>${record.camera}</strong></div><div><small>${isAbsence ? "Duration" : "AI confidence"}</small><strong>${isAbsence ? record.duration : record.confidence + "%"}</strong></div><div><small>Severity</small><strong>${badge(record.severity)}</strong></div></div></div>
       <div class="detail-block"><h3>Case status</h3>${badge(record.status)}</div><textarea class="field notes" placeholder="Add supervisor notes..."></textarea></div></div>
     <div class="modal-actions"><button class="button primary" data-case-action="Confirmed violation">${icon("gavel")} Confirm violation</button><button class="button" data-case-action="Marked as false detection">${icon("close")} False detection</button><button class="button" data-case-action="Case resolved">${icon("task_alt")} Resolve case</button><button class="button" data-case-action="Report exported">${icon("download")} Export report</button></div></div>`;
   $("#modalBackdrop").hidden = false;
   document.body.style.overflow = "hidden";
-  $("#videoPlay").addEventListener("click", e => { e.currentTarget.classList.toggle("playing"); e.currentTarget.innerHTML = icon(e.currentTarget.classList.contains("playing") ? "pause" : "play_arrow"); });
   $$('[data-case-action]').forEach(btn => btn.addEventListener('click', () => showToast(btn.dataset.caseAction)));
 }
 function closeModal() { $("#modalBackdrop").hidden = true; document.body.style.overflow = ""; }
