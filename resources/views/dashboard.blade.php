@@ -15,7 +15,7 @@
     <aside class="sidebar" id="sidebar">
       <a class="brand" href="#overview" aria-label="Iotnect dashboard">
         <span class="brand-mark"><span class="material-symbols-rounded">security</span></span>
-        <span><strong>Iotnect</strong></span>
+        <span><strong>Neovision</strong></span>
       </a>
 
       <nav class="nav" aria-label="Primary navigation">
@@ -42,7 +42,7 @@
         @csrf
         <button class="profile-mini" type="submit" title="Log out">
           <span class="avatar">AN</span>
-          <span><strong>Aina Noor</strong><small>Safety Supervisor</small></span>
+          <span><strong>Admin</strong><small>Safety Supervisor</small></span>
           <span class="material-symbols-rounded">logout</span>
         </button>
       </form>

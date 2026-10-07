@@ -1,16 +1,16 @@
 const people = [
-  { id:"EMP-1042", name:"Aiman Hakim", dept:"Assembly", location:"Assembly Line A", camera:"CAM-04", time:"10:42:18", date:"05 Oct 2026", severity:"Critical", status:"Unresolved", confidence:96, type:"Phone usage" },
-  { id:"EMP-2087", name:"Nur Izzati", dept:"Packaging", location:"Packing Zone 2", camera:"CAM-11", time:"10:31:04", date:"05 Oct 2026", severity:"Warning", status:"Under review", confidence:91, type:"Phone usage" },
-  { id:"EMP-3184", name:"Daniel Wong", dept:"Machining", location:"CNC Bay 4", camera:"CAM-07", time:"09:58:46", date:"05 Oct 2026", severity:"Critical", status:"Confirmed", confidence:98, type:"Phone usage" },
-  { id:"EMP-4019", name:"Siti Aminah", dept:"Quality", location:"QA Station 1", camera:"CAM-15", time:"09:17:32", date:"05 Oct 2026", severity:"Warning", status:"Resolved", confidence:88, type:"Phone usage" },
-  { id:"EMP-5331", name:"Raj Kumar", dept:"Warehouse", location:"Loading Bay", camera:"CAM-18", time:"08:49:15", date:"05 Oct 2026", severity:"Warning", status:"Under review", confidence:93, type:"Phone usage" }
+  { id:"EMP-1042", name:"Aiman Hakim", dept:"Assembly", location:"Assembly Line A", camera:"CAM-04", time:"10:42:18", date:"05 Oct 2026", confidence:96, type:"Phone usage" },
+  { id:"EMP-2087", name:"Nur Izzati", dept:"Packaging", location:"Packing Zone 2", camera:"CAM-11", time:"10:31:04", date:"05 Oct 2026", confidence:91, type:"Phone usage" },
+  { id:"EMP-3184", name:"Daniel Wong", dept:"Machining", location:"CNC Bay 4", camera:"CAM-07", time:"09:58:46", date:"05 Oct 2026", confidence:98, type:"Phone usage" },
+  { id:"EMP-4019", name:"Siti Aminah", dept:"Quality", location:"QA Station 1", camera:"CAM-15", time:"09:17:32", date:"05 Oct 2026", confidence:88, type:"Phone usage" },
+  { id:"EMP-5331", name:"Raj Kumar", dept:"Warehouse", location:"Loading Bay", camera:"CAM-18", time:"08:49:15", date:"05 Oct 2026", confidence:93, type:"Phone usage" }
 ];
 
 const absence = [
-  { ...people[1], id:"EMP-2208", name:"Farah Nadia", dept:"Packaging", location:"Post PK-07", camera:"CAM-12", time:"10:36:20", severity:"Critical", status:"Unresolved", confidence:97, type:"Post left for 18 min", duration:"18m 42s" },
-  { ...people[2], id:"EMP-3390", name:"Harith Iskandar", dept:"Machining", location:"Post MC-04", time:"10:11:06", severity:"Warning", status:"Under review", confidence:92, type:"Late return", duration:"11m 08s" },
-  { ...people[3], id:"EMP-4416", name:"Mei Ling", dept:"Quality", location:"Post QA-02", time:"09:42:51", severity:"Warning", status:"Resolved", confidence:89, type:"Post left for 7 min", duration:"07m 16s" },
-  { ...people[4], id:"EMP-5277", name:"Kavitha Rao", dept:"Warehouse", location:"Post WH-11", time:"08:55:40", severity:"Critical", status:"Confirmed", confidence:95, type:"Absent at shift start", duration:"24m 03s" }
+  { ...people[1], id:"EMP-2208", name:"Farah Nadia", dept:"Packaging", location:"Post PK-07", camera:"CAM-12", time:"10:36:20", confidence:97, type:"Post left for 18 min", duration:"18m 42s" },
+  { ...people[2], id:"EMP-3390", name:"Harith Iskandar", dept:"Machining", location:"Post MC-04", time:"10:11:06", confidence:92, type:"Late return", duration:"11m 08s" },
+  { ...people[3], id:"EMP-4416", name:"Mei Ling", dept:"Quality", location:"Post QA-02", time:"09:42:51", confidence:89, type:"Post left for 7 min", duration:"07m 16s" },
+  { ...people[4], id:"EMP-5277", name:"Kavitha Rao", dept:"Warehouse", location:"Post WH-11", time:"08:55:40", confidence:95, type:"Absent at shift start", duration:"24m 03s" }
 ];
 
 const movementRecords = [
@@ -34,6 +34,7 @@ let toastTimer;
 
 function icon(name) { return `<span class="material-symbols-rounded">${name}</span>`; }
 function noFootage() { return `<div class="footage-empty">${icon("videocam_off")}<p>No footage available at the moment</p></div>`; }
+function noEvidence() { return `<div class="footage-empty">${icon("image_not_supported")}<p>No evidence shown</p></div>`; }
 function badge(value) {
   const cls = /critical|unresolved|confirmed|alert/i.test(value) ? "red" : /warning|review/i.test(value) ? "amber" : /resolved|online|normal/i.test(value) ? "green" : "";
   return `<span class="badge ${cls}">${value}</span>`;
@@ -109,7 +110,6 @@ function renderDetection(type) {
     <div class="metric-grid">
       ${metric(isPhone ? "Detections today" : "Post events today", isPhone ? "12" : "8", isPhone ? "smartphone" : "person_off", "alert", "+3 from yesterday")}
       ${metric("Employees involved", isPhone ? "9" : "6", "badge")}
-      ${metric("Unresolved", isPhone ? "4" : "3", "pending_actions", "warn", "Requires review")}
       ${metric(isPhone ? "Highest risk area" : "Average absence", isPhone ? "Line A" : "12m 18s", isPhone ? "location_on" : "timer", "good", isPhone ? "5 detections" : "-2m this week")}
     </div>
     <section class="panel filter-panel">
@@ -117,7 +117,6 @@ function renderDetection(type) {
       <form class="search-row" id="recordSearch">
         <label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="searchInput" placeholder="Employee name or ID (e.g. EMP-1042)"></label>
         <select class="field" id="deptFilter" aria-label="Department"><option value="">All departments</option><option>Assembly</option><option>Packaging</option><option>Machining</option><option>Quality</option><option>Warehouse</option></select>
-        <select class="field" id="statusFilter" aria-label="Status"><option value="">All statuses</option><option>Unresolved</option><option>Under review</option><option>Confirmed</option><option>Resolved</option></select>
         <input class="field" type="date" value="2026-10-05" aria-label="Date">
         <button class="button primary" type="submit">${icon("search")} Find</button>
       </form>
@@ -135,11 +134,11 @@ function renderTable(records, type) {
   const target = $("#recordsTable");
   $("#resultCount").textContent = `${records.length} record${records.length === 1 ? "" : "s"}`;
   if (!records.length) {
-    target.innerHTML = `<div class="empty-state">${icon("person_search")}<strong>No matching records</strong><p>Try a different employee name, ID, department, or status.</p></div>`;
+    target.innerHTML = `<div class="empty-state">${icon("person_search")}<strong>No matching records</strong><p>Try a different employee name, ID, or department.</p></div>`;
     return;
   }
-  target.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Department</th><th>Event</th><th>Location</th><th>Date & time</th>${type === "phone" ? "<th>Confidence</th>" : "<th>Duration</th>"}<th>Severity</th><th>Status</th><th></th></tr></thead><tbody>
-    ${records.map(r => `<tr data-id="${r.id}"><td><div class="employee"><span class="avatar">${r.name.split(" ").map(n=>n[0]).join("").slice(0,2)}</span><span><strong>${r.name}</strong><small>${r.id}</small></span></div></td><td>${r.dept}</td><td>${r.type}</td><td><strong>${r.location}</strong><br><span class="mono">${r.camera}</span></td><td>${r.date}<br><span class="mono">${r.time}</span></td>${type === "phone" ? `<td><span class="confidence"><i style="--score:${r.confidence}%"></i><b>${r.confidence}%</b></span></td>` : `<td class="mono">${r.duration}</td>`}<td>${badge(r.severity)}</td><td>${badge(r.status)}</td><td>${icon("chevron_right")}</td></tr>`).join("")}
+  target.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Department</th><th>Event</th><th>Location</th><th>Date & time</th>${type === "phone" ? "<th>Confidence</th>" : "<th>Duration</th>"}<th></th></tr></thead><tbody>
+    ${records.map(r => `<tr data-id="${r.id}"><td><div class="employee"><span class="avatar">${r.name.split(" ").map(n=>n[0]).join("").slice(0,2)}</span><span><strong>${r.name}</strong><small>${r.id}</small></span></div></td><td>${r.dept}</td><td>${r.type}</td><td><strong>${r.location}</strong><br><span class="mono">${r.camera}</span></td><td>${r.date}<br><span class="mono">${r.time}</span></td>${type === "phone" ? `<td><span class="confidence"><i style="--score:${r.confidence}%"></i><b>${r.confidence}%</b></span></td>` : `<td class="mono">${r.duration}</td>`}<td>${icon("chevron_right")}</td></tr>`).join("")}
   </tbody></table></div>`;
   $$('tbody tr', target).forEach(row => row.addEventListener('click', () => openIncident([...people, ...absence].find(r => r.id === row.dataset.id))));
 }
@@ -148,13 +147,11 @@ function bindDetectionFilters(records, type) {
   const run = () => {
     const q = $("#searchInput").value.trim().toLowerCase();
     const dept = $("#deptFilter").value;
-    const status = $("#statusFilter").value;
-    const filtered = records.filter(r => (!q || `${r.id} ${r.name}`.toLowerCase().includes(q)) && (!dept || r.dept === dept) && (!status || r.status === status));
+    const filtered = records.filter(r => (!q || `${r.id} ${r.name}`.toLowerCase().includes(q)) && (!dept || r.dept === dept));
     renderTable(filtered, type);
   };
   $("#recordSearch").addEventListener("submit", e => { e.preventDefault(); run(); });
   $("#deptFilter").addEventListener("change", run);
-  $("#statusFilter").addEventListener("change", run);
   $("#clearFilters").addEventListener("click", () => { $("#recordSearch").reset(); renderTable(records, type); });
 }
 
@@ -248,13 +245,10 @@ function openIncident(record) {
   if (!record) record = people[0];
   const isAbsence = record.duration;
   $("#modalContent").innerHTML = `<div class="modal-inner"><div class="modal-title-row"><span class="monitor-icon">${icon(isAbsence ? "person_off" : "smartphone")}</span><div><span class="status-label">Case ${record.id}-${record.time.replaceAll(":","")}</span><h2 id="modalTitle">${record.type}</h2><p>${record.name} &middot; ${record.id}</p></div></div>
-    <div class="detail-grid"><div class="evidence">${noFootage()}</div>
-      <div class="detail-stack"><div class="detail-block"><h3>Incident details</h3><div class="detail-list"><div><small>Employee</small><strong>${record.name}</strong></div><div><small>Department</small><strong>${record.dept}</strong></div><div><small>Location</small><strong>${record.location}</strong></div><div><small>Camera</small><strong>${record.camera}</strong></div><div><small>${isAbsence ? "Duration" : "AI confidence"}</small><strong>${isAbsence ? record.duration : record.confidence + "%"}</strong></div><div><small>Severity</small><strong>${badge(record.severity)}</strong></div></div></div>
-      <div class="detail-block"><h3>Case status</h3>${badge(record.status)}</div><textarea class="field notes" placeholder="Add supervisor notes..."></textarea></div></div>
-    <div class="modal-actions"><button class="button primary" data-case-action="Confirmed violation">${icon("gavel")} Confirm violation</button><button class="button" data-case-action="Marked as false detection">${icon("close")} False detection</button><button class="button" data-case-action="Case resolved">${icon("task_alt")} Resolve case</button><button class="button" data-case-action="Report exported">${icon("download")} Export report</button></div></div>`;
+    <div class="detail-grid"><div class="evidence">${noEvidence()}</div>
+      <div class="detail-stack"><div class="detail-block"><h3>Incident details</h3><div class="detail-list"><div><small>Employee</small><strong>${record.name}</strong></div><div><small>Department</small><strong>${record.dept}</strong></div><div><small>Location</small><strong>${record.location}</strong></div><div><small>Camera</small><strong>${record.camera}</strong></div><div><small>${isAbsence ? "Duration" : "AI confidence"}</small><strong>${isAbsence ? record.duration : record.confidence + "%"}</strong></div></div></div></div></div>`;
   $("#modalBackdrop").hidden = false;
   document.body.style.overflow = "hidden";
-  $$('[data-case-action]').forEach(btn => btn.addEventListener('click', () => showToast(btn.dataset.caseAction)));
 }
 function closeModal() { $("#modalBackdrop").hidden = true; document.body.style.overflow = ""; }
 
