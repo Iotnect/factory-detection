@@ -27,7 +27,7 @@
         <a class="nav-link" href="{{ route('modules.camera-tracking') }}" data-page="camera" aria-label="Camera Tracking"><span class="material-symbols-rounded">videocam</span><span>Camera Tracking</span></a>
         <a class="nav-link" href="{{ route('modules.floorplan-route-tracking') }}" data-page="route" aria-label="Floorplan Route Tracking"><span class="material-symbols-rounded">route</span><span>Route Tracking</span></a>
         <p class="nav-label">Management</p>
-        <button class="nav-link" data-toast="Reports are ready for export"><span class="material-symbols-rounded">analytics</span><span>Reports</span></button>
+        <a class="nav-link" href="#reports" data-page="reports"><span class="material-symbols-rounded">analytics</span><span>Reports</span></a>
         <button class="nav-link" data-toast="Settings panel opened"><span class="material-symbols-rounded">settings</span><span>Settings</span></button>
       </nav>
 

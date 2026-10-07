@@ -28,7 +28,9 @@ class DashboardNavigationTest extends TestCase
             ->assertSee('Camera Tracking')
             ->assertSee(route('modules.camera-tracking'), false)
             ->assertSee('Floorplan Route Tracking')
-            ->assertSee(route('modules.floorplan-route-tracking'), false);
+            ->assertSee(route('modules.floorplan-route-tracking'), false)
+            ->assertSee('href="#reports"', false)
+            ->assertSee('data-page="reports"', false);
     }
 
     public function test_dashboard_receives_the_authenticated_username(): void

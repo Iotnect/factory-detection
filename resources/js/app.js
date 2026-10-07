@@ -14,15 +14,15 @@ const absence = [
 ];
 
 const movementRecords = [
-  { id:"MOV-1042-01", time:"10:42:18", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"East Corridor", to:"Assembly Line A", camera:"CAM-04", duration:"00:46", confidence:96, event:"Zone transition", status:"Normal" },
-  { id:"MOV-1042-02", time:"10:17:03", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Packaging", to:"Restricted Storage", camera:"CAM-19", duration:"02:14", confidence:94, event:"Restricted entry", status:"Alert" },
-  { id:"MOV-1042-03", time:"09:36:41", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Quality Assurance", to:"East Corridor", camera:"CAM-08", duration:"06:12", confidence:93, event:"Extended stop", status:"Review" },
-  { id:"MOV-1042-04", time:"08:14:22", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Main Gate", to:"Quality Assurance", camera:"CAM-02", duration:"01:08", confidence:98, event:"Zone transition", status:"Normal" }
+  { id:"MOV-1042-01", date:"05 Oct 2026", time:"10:42:18", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"East Corridor", to:"Assembly Line A", camera:"CAM-04", duration:"00:46", confidence:96, event:"Zone transition", status:"Normal" },
+  { id:"MOV-1042-02", date:"05 Oct 2026", time:"10:17:03", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Packaging", to:"Restricted Storage", camera:"CAM-19", duration:"02:14", confidence:94, event:"Restricted entry", status:"Alert" },
+  { id:"MOV-1042-03", date:"05 Oct 2026", time:"09:36:41", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Quality Assurance", to:"East Corridor", camera:"CAM-08", duration:"06:12", confidence:93, event:"Extended stop", status:"Review" },
+  { id:"MOV-1042-04", date:"05 Oct 2026", time:"08:14:22", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Main Gate", to:"Quality Assurance", camera:"CAM-02", duration:"01:08", confidence:98, event:"Zone transition", status:"Normal" }
 ];
 
 const pageMeta = {
   overview:"Command overview", phone:"Phone usage detection", absence:"Post & absence detection",
-  camera:"Camera tracking", route:"Floorplan route tracking"
+  camera:"Camera tracking", route:"Floorplan route tracking", reports:"Reports"
 };
 
 const $ = (selector, root=document) => root.querySelector(selector);
@@ -98,6 +98,105 @@ function monitorCard(page, iconName, title, text, count, suffix) {
 }
 function activity(iconName, name, copy, time, tone) {
   return `<div class="activity-item" data-record="${name}"><span class="activity-icon ${tone}">${icon(iconName)}</span><div><strong>${name}</strong><small>${copy}</small></div><span class="activity-time">${time}</span></div>`;
+}
+
+const reportDefinitions = {
+  phone: {
+    title: "Mobile phone usage",
+    description: "Export detected mobile phone usage incidents.",
+    icon: "phonelink_erase",
+    records: people,
+    columns: [
+      ["Employee ID", "id"], ["Employee", "name"], ["Department", "dept"], ["Event", "type"],
+      ["Location", "location"], ["Camera", "camera"], ["Date", "date"], ["Time", "time"], ["AI confidence", "confidence"]
+    ]
+  },
+  absence: {
+    title: "Leave & Absence",
+    description: "Export leave-post, late-return, and absence incidents.",
+    icon: "person_off",
+    records: absence,
+    columns: [
+      ["Employee ID", "id"], ["Employee", "name"], ["Department", "dept"], ["Event", "type"],
+      ["Location", "location"], ["Camera", "camera"], ["Date", "date"], ["Time", "time"], ["Duration", "duration"]
+    ]
+  },
+  route: {
+    title: "Route tracking",
+    description: "Export AI-inferred employee movement and route records.",
+    icon: "route",
+    records: movementRecords,
+    columns: [
+      ["Movement ID", "id"], ["Employee ID", "employeeId"], ["Employee", "employee"], ["From", "from"],
+      ["To", "to"], ["Camera", "camera"], ["Date", "date"], ["Time", "time"], ["Duration", "duration"],
+      ["AI confidence", "confidence"], ["Event", "event"], ["Status", "status"]
+    ]
+  }
+};
+
+function renderReports() {
+  app.innerHTML = `<section class="page reports-page">
+    ${pageHead("Management", "Reports", "Choose a report and export only the records within your selected date range.")}
+    <div class="report-grid">
+      ${Object.entries(reportDefinitions).map(([type, report]) => `<article class="panel report-card">
+        <div class="report-card__heading"><span class="report-icon">${icon(report.icon)}</span><div><h2>${report.title}</h2><p>${report.description}</p></div></div>
+        <form class="report-export-form" data-report-type="${type}">
+          <div class="report-date-range">
+            <label><span>From</span><input class="field" name="from" type="date" value="2026-10-01" required></label>
+            <label><span>To</span><input class="field" name="to" type="date" value="2026-10-07" required></label>
+          </div>
+          <button class="button primary" type="submit">${icon("download")} Export</button>
+        </form>
+      </article>`).join("")}
+    </div>
+  </section>`;
+
+  $$(".report-export-form").forEach(form => form.addEventListener("submit", exportReport));
+}
+
+function exportReport(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const report = reportDefinitions[form.dataset.reportType];
+  const from = form.elements.from.value;
+  const to = form.elements.to.value;
+
+  if (from > to) {
+    showToast("The start date must be before the end date");
+    return;
+  }
+
+  const records = report.records.filter(record => {
+    const date = recordDateValue(record.date);
+    return date >= from && date <= to;
+  });
+
+  if (!records.length) {
+    showToast("No records found in the selected date range");
+    return;
+  }
+
+  const rows = [
+    report.columns.map(([heading]) => heading),
+    ...records.map(record => report.columns.map(([, key]) => record[key] ?? ""))
+  ];
+  const csv = `\uFEFF${rows.map(row => row.map(csvCell).join(",")).join("\r\n")}`;
+  const download = document.createElement("a");
+  download.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  download.download = `${form.dataset.reportType}-${from}-to-${to}.csv`;
+  download.click();
+  URL.revokeObjectURL(download.href);
+  showToast(`${records.length} ${report.title} record${records.length === 1 ? "" : "s"} exported`);
+}
+
+function recordDateValue(date) {
+  const months = { Jan:"01", Feb:"02", Mar:"03", Apr:"04", May:"05", Jun:"06", Jul:"07", Aug:"08", Sep:"09", Oct:"10", Nov:"11", Dec:"12" };
+  const [day, month, year] = date.split(" ");
+  return `${year}-${months[month]}-${day.padStart(2, "0")}`;
+}
+
+function csvCell(value) {
+  return `"${String(value).replaceAll('"', '""')}"`;
 }
 
 function renderDetection(type) {
@@ -224,7 +323,7 @@ function renderMovementRecords() {
   return `<section class="panel movement-records">
     <div class="panel-head"><div class="panel-title">${icon("directions_walk")}<div><h2>Employee movement records</h2><p>AI-inferred movements generated from CCTV detections and re-identification.</p></div></div><div class="movement-record-actions"><span class="result-count">${movementRecords.length} records</span><button class="button small" data-action="export">${icon("download")} Export</button></div></div>
     <div class="table-wrap"><table><thead><tr><th>Timestamp</th><th>Employee</th><th>Movement</th><th>Camera</th><th>Dwell / travel</th><th>AI confidence</th><th>Event</th><th>Status</th><th>Evidence</th></tr></thead><tbody>
-      ${movementRecords.map(record => `<tr><td><strong>${record.time}</strong><br><span class="mono">05 Oct 2026</span></td><td><div class="employee"><span class="avatar">AH</span><span><strong>${record.employee}</strong><small>${record.employeeId}</small></span></div></td><td><div class="movement-path"><span>${record.from}</span>${icon("arrow_forward")}<strong>${record.to}</strong></div></td><td class="mono">${record.camera}</td><td class="mono">${record.duration}</td><td><span class="confidence"><i style="--score:${record.confidence}%"></i><b>${record.confidence}%</b></span></td><td>${record.event}</td><td>${badge(record.status)}</td><td><button class="button small evidence-button" data-movement-id="${record.id}">${icon("smart_display")} View</button></td></tr>`).join("")}
+      ${movementRecords.map(record => `<tr><td><strong>${record.time}</strong><br><span class="mono">${record.date}</span></td><td><div class="employee"><span class="avatar">AH</span><span><strong>${record.employee}</strong><small>${record.employeeId}</small></span></div></td><td><div class="movement-path"><span>${record.from}</span>${icon("arrow_forward")}<strong>${record.to}</strong></div></td><td class="mono">${record.camera}</td><td class="mono">${record.duration}</td><td><span class="confidence"><i style="--score:${record.confidence}%"></i><b>${record.confidence}%</b></span></td><td>${record.event}</td><td>${badge(record.status)}</td><td><button class="button small evidence-button" data-movement-id="${record.id}">${icon("smart_display")} View</button></td></tr>`).join("")}
     </tbody></table></div>
   </section>`;
 }
@@ -260,6 +359,7 @@ function navigate(page) {
   if (currentPage === "phone" || currentPage === "absence") renderDetection(currentPage);
   if (currentPage === "camera") renderCamera();
   if (currentPage === "route") renderRoute();
+  if (currentPage === "reports") renderReports();
   $("#sidebar").classList.remove("open");
   app.focus({preventScroll:true});
 }
