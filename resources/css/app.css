@@ -20,6 +20,28 @@
   --inset: inset 3px 3px 8px rgba(55, 39, 91, .08), inset -3px -3px 8px rgba(255, 255, 255, .9);
 }
 
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #13111a;
+  --surface: #1c1925;
+  --white: #252130;
+  --ink: #f3effa;
+  --muted: #aaa4b8;
+  --line: rgba(235, 228, 255, .11);
+  --purple: #a78bf4;
+  --purple-dark: #c5b3ff;
+  --purple-pale: #302749;
+  --green: #58cbaa;
+  --green-pale: #18382f;
+  --amber: #e0a34e;
+  --amber-pale: #3b2d18;
+  --red: #ef7e90;
+  --red-pale: #3e222b;
+  --shadow: 10px 10px 28px rgba(0, 0, 0, .28), -7px -7px 20px rgba(255, 255, 255, .025);
+  --shadow-sm: 5px 5px 14px rgba(0, 0, 0, .25), -4px -4px 12px rgba(255, 255, 255, .025);
+  --inset: inset 3px 3px 8px rgba(0, 0, 0, .28), inset -3px -3px 8px rgba(255, 255, 255, .025);
+}
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 "DM Sans", sans-serif; }
@@ -221,6 +243,37 @@ tbody tr:last-child td { border-bottom:0; }
 .report-date-range .field { min-width: 148px; }
 .report-export-form .button { white-space: nowrap; }
 
+.settings-grid { display: grid; gap: 18px; }
+.settings-card { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.settings-card__copy { display: flex; align-items: center; gap: 14px; }
+.settings-card__copy h2 { margin: 0; font: 700 17px Manrope, sans-serif; }
+.settings-card__copy p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+.settings-icon { width: 48px; height: 48px; flex: 0 0 auto; border-radius: 15px; color: var(--purple); background: var(--purple-pale); box-shadow: var(--inset); display: grid; place-items: center; }
+.theme-switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.theme-switch input { position: absolute; opacity: 0; pointer-events: none; }
+.theme-switch__track { width: 52px; height: 29px; padding: 3px; border-radius: 999px; background: #cbc6d4; box-shadow: var(--inset); transition: .2s ease; }
+.theme-switch__thumb { display: block; width: 23px; height: 23px; border-radius: 50%; background: white; box-shadow: 0 3px 8px rgba(30, 22, 48, .25); transition: transform .2s ease; }
+.theme-switch input:checked + .theme-switch__track { background: var(--purple); }
+.theme-switch input:checked + .theme-switch__track .theme-switch__thumb { transform: translateX(23px); }
+.theme-switch input:focus-visible + .theme-switch__track { outline: 3px solid rgba(116, 87, 217, .28); outline-offset: 3px; }
+.theme-switch__state { min-width: 22px; color: var(--muted); font: 600 10px "IBM Plex Mono", monospace; text-transform: uppercase; }
+
+html[data-theme="dark"] .sidebar { background: rgba(28, 25, 37, .94); }
+html[data-theme="dark"] .topbar { background: rgba(19, 17, 26, .9); }
+html[data-theme="dark"] .field,
+html[data-theme="dark"] .chart,
+html[data-theme="dark"] .table-wrap,
+html[data-theme="dark"] .camera-feed,
+html[data-theme="dark"] .floorplan,
+html[data-theme="dark"] .evidence,
+html[data-theme="dark"] .detail-block,
+html[data-theme="dark"] .login-input-wrap { background: #25212f; }
+html[data-theme="dark"] tbody tr:hover { background: rgba(255, 255, 255, .035); }
+html[data-theme="dark"] .map-zone { fill: #221f2b; stroke: #514a60; }
+html[data-theme="dark"] .map-zone.restricted { fill: #372128; stroke: #a85d6c; }
+html[data-theme="dark"] .map-label { fill: #aaa4b8; }
+html[data-theme="dark"] .theme-switch__track { background: #494353; }
+
 .modal-backdrop { position:fixed; inset:0; z-index:100; padding:24px; background:rgba(23,20,39,.45); backdrop-filter:blur(6px); display:grid; place-items:center; }
 .modal-backdrop[hidden] { display:none; }
 .incident-modal { width:min(980px,100%); max-height:calc(100vh - 48px); overflow:auto; position:relative; border:1px solid rgba(255,255,255,.5); border-radius:24px; background:var(--surface); box-shadow:0 30px 90px rgba(22,15,41,.28); }
@@ -280,6 +333,7 @@ tbody tr:last-child td { border-bottom:0; }
   .search-row .search-field { grid-column:auto; }
   .report-export-form, .report-date-range { align-items: stretch; flex-direction: column; }
   .report-date-range .field { min-width: 0; }
+  .settings-card { align-items: flex-start; flex-direction: column; }
   .panel { padding:15px; }
   .modal-backdrop { padding:8px; }
   .modal-inner { padding:18px; }

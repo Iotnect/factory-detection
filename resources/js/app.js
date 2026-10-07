@@ -22,7 +22,7 @@ const movementRecords = [
 
 const pageMeta = {
   overview:"Command overview", phone:"Phone usage detection", absence:"Post & absence detection",
-  camera:"Camera tracking", route:"Floorplan route tracking", reports:"Reports"
+  camera:"Camera tracking", route:"Floorplan route tracking", reports:"Reports", settings:"Settings"
 };
 
 const $ = (selector, root=document) => root.querySelector(selector);
@@ -31,6 +31,7 @@ const app = $("#app");
 const currentUsername = document.body.dataset.username || "User";
 let currentPage = "overview";
 let toastTimer;
+const themeStorageKey = "neovision-theme";
 
 function icon(name) { return `<span class="material-symbols-rounded">${name}</span>`; }
 function noFootage() { return `<div class="footage-empty">${icon("videocam_off")}<p>No footage available at the moment</p></div>`; }
@@ -152,6 +153,41 @@ function renderReports() {
   </section>`;
 
   $$(".report-export-form").forEach(form => form.addEventListener("submit", exportReport));
+}
+
+function renderSettings() {
+  const isDarkMode = document.documentElement.dataset.theme === "dark";
+  app.innerHTML = `<section class="page settings-page">
+    ${pageHead("Management", "Settings", "Configure your dashboard appearance and preferences.")}
+    <div class="settings-grid">
+      <section class="panel settings-card">
+        <div class="settings-card__copy"><span class="settings-icon">${icon("dark_mode")}</span><div><h2>Dark mode</h2><p>Use a darker colour scheme throughout the Neovision dashboard.</p></div></div>
+        <label class="theme-switch" for="darkModeToggle">
+          <input id="darkModeToggle" type="checkbox" role="switch" ${isDarkMode ? "checked" : ""}>
+          <span class="theme-switch__track"><span class="theme-switch__thumb"></span></span>
+          <span class="theme-switch__state">${isDarkMode ? "On" : "Off"}</span>
+        </label>
+      </section>
+    </div>
+  </section>`;
+
+  $("#darkModeToggle").addEventListener("change", event => {
+    const theme = event.currentTarget.checked ? "dark" : "light";
+    applyTheme(theme);
+    $(".theme-switch__state").textContent = theme === "dark" ? "On" : "Off";
+    showToast(`Dark mode ${theme === "dark" ? "enabled" : "disabled"}`);
+  });
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem(themeStorageKey, theme);
+}
+
+function initialiseTheme() {
+  const savedTheme = localStorage.getItem(themeStorageKey);
+  const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  applyTheme(savedTheme || preferredTheme);
 }
 
 function exportReport(event) {
@@ -360,6 +396,7 @@ function navigate(page) {
   if (currentPage === "camera") renderCamera();
   if (currentPage === "route") renderRoute();
   if (currentPage === "reports") renderReports();
+  if (currentPage === "settings") renderSettings();
   $("#sidebar").classList.remove("open");
   app.focus({preventScroll:true});
 }
@@ -384,4 +421,5 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal()
 
 const now = new Date();
 $("#currentDate").textContent = new Intl.DateTimeFormat("en-MY", { weekday:"short", day:"2-digit", month:"short", year:"numeric" }).format(now);
+initialiseTheme();
 navigate(location.hash.slice(1) || "overview");
