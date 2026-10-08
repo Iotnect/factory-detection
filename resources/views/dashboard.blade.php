@@ -14,7 +14,7 @@
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
       <a class="brand" href="#overview" aria-label="Iotnect dashboard">
-        <span class="brand-mark"><span class="material-symbols-rounded">security</span></span>
+        <span class="brand-mark brand-mark--logo"><img src="{{ asset('images/neovision.png') }}" alt="Neo Vision"></span>
         <span><strong>Neovision</strong></span>
       </a>
 
