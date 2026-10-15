@@ -28,7 +28,9 @@ const pageMeta = {
 const demoCameras = [
   { id:"camera-01", location:"Machining Floor", status:"Online" },
   { id:"camera-02", location:"Production Floor", status:"Online" },
-  { id:"camera-03", location:"Warehouse", status:"Offline" }
+  { id:"camera-03", location:"Packaging Floor", status:"Online" },
+  { id:"camera-04", location:"Assembly Floor", status:"Online" },
+  { id:"camera-05", location:"Warehouse", status:"Offline" }
 ];
 const demoTrackedPeople = [
   ...people.map(({ id, name, dept }) => ({ id, name, dept })),
@@ -45,7 +47,7 @@ const demoTrackedPeople = [
   { id:"EMP-2116", name:"Emily Lim", dept:"Packaging" },
   { id:"EMP-3220", name:"Hafiz Abdullah", dept:"Machining" },
   { id:"EMP-4057", name:"Priya Devi", dept:"Quality" }
-].map((person, index) => ({ ...person, camera:index % 2 === 0 ? "camera-01" : "camera-02" }));
+].map((person, index) => ({ ...person, camera:`camera-${String(index % 4 + 1).padStart(2, "0")}` }));
 
 const $ = (selector, root=document) => root.querySelector(selector);
 const $$ = (selector, root=document) => [...root.querySelectorAll(selector)];
@@ -321,7 +323,7 @@ function renderCamera() {
   const offlineCount = demoCameras.filter(camera => camera.status === "Offline").length;
   app.innerHTML = `<section class="page">
     ${pageHead(`${onlineCount} cameras online · ${offlineCount} offline`, "Camera tracking", "Follow employees across camera zones using visual re-identification.", `<button class="button">${icon("grid_view")} Camera wall</button>`)}
-    <div class="metric-grid">${metric("Online", onlineCount, "videocam", "good", "Demo feeds available", "online")}${metric("Offline", offlineCount, "videocam_off", "alert", "camera-03 offline", "offline")}${metric("Tracked people", demoTrackedPeople.length, "person_pin_circle", "", "View tracked people", "people")}${metric("Re-ID accuracy", "97.4%", "center_focus_strong", "good", "+0.6% this week")}</div>
+    <div class="metric-grid">${metric("Online", onlineCount, "videocam", "good", "Demo feeds available", "online")}${metric("Offline", offlineCount, "videocam_off", "alert", "camera-05 offline", "offline")}${metric("Tracked people", demoTrackedPeople.length, "person_pin_circle", "", "View tracked people", "people")}${metric("Re-ID accuracy", "97.4%", "center_focus_strong", "good", "+0.6% this week")}</div>
     <section class="panel filter-panel"><form class="search-row" id="cameraSearch"><label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="cameraPerson" placeholder="Search employee name or ID"></label><select class="field"><option>All zones</option><option>Assembly</option><option>Packaging</option><option>Warehouse</option></select><select class="field"><option>All cameras</option><option>CAM-04</option><option>CAM-11</option><option>CAM-18</option></select><select class="field"><option>Live now</option><option>Last hour</option><option>Today</option></select><button class="button primary">${icon("my_location")} Track</button></form></section>
     <div class="camera-layout">
       <section class="panel"><div class="panel-head"><div><h2>Live camera matrix</h2><p>Selected identity: Aiman Hakim &middot; EMP-1042</p></div>${badge("Live tracking")}</div><div class="camera-grid">
@@ -369,7 +371,8 @@ function renderCamera() {
   });
 }
 function cameraFeed(videoName, position) {
-  return `<button class="camera-feed is-loading" type="button" disabled data-camera-label="${videoName}" aria-label="Expand ${videoName}, tile ${position}" aria-haspopup="dialog"><video preload="auto" muted loop playsinline src="/demo-video/${videoName}.mp4" aria-label="${videoName} demo footage"></video><span class="camera-load-status" role="status">Preparing cameras&hellip;</span><span class="camera-expand"><span>${videoName}</span>${icon("open_in_full")}</span></button>`;
+  const cameraLabel = `camera-${String(position).padStart(2, "0")}`;
+  return `<button class="camera-feed is-loading" type="button" disabled data-camera-label="${cameraLabel}" aria-label="Expand ${cameraLabel}" aria-haspopup="dialog"><video preload="auto" muted loop playsinline src="/demo-video/${videoName}.mp4" aria-label="${cameraLabel} demo footage"></video><span class="camera-load-status" role="status">Preparing cameras&hellip;</span><span class="camera-expand"><span>${cameraLabel}</span>${icon("open_in_full")}</span></button>`;
 }
 
 function bindCameraDialog(dialog, closeButton) {
