@@ -31,6 +31,7 @@ const app = $("#app");
 const currentUsername = document.body.dataset.username || "User";
 let currentPage = "overview";
 let toastTimer;
+let cameraLoadController;
 const themeStorageKey = "neovision-theme";
 
 function icon(name) { return `<span class="material-symbols-rounded">${name}</span>`; }
@@ -316,6 +317,14 @@ function renderCamera() {
   </section>`;
   $("#cameraSearch").addEventListener("submit", e => { e.preventDefault(); showToast($("#cameraPerson").value ? `Tracking ${$("#cameraPerson").value}` : "Showing all tracked employees"); });
   $$(".camera-feed", app).forEach(feed => feed.addEventListener("click", () => openCameraViewer(feed)));
+  const retryButton = document.createElement("button");
+  retryButton.type = "button";
+  retryButton.className = "button camera-retry";
+  retryButton.textContent = "Retry cameras";
+  retryButton.hidden = true;
+  $(".camera-grid", app).after(retryButton);
+  retryButton.addEventListener("click", () => initialiseCameraFeeds(retryButton));
+  initialiseCameraFeeds(retryButton);
   const viewer = $("#cameraViewer");
   $("#cameraViewerClose").addEventListener("click", () => viewer.close());
   viewer.addEventListener("click", e => {
@@ -331,7 +340,59 @@ function renderCamera() {
   });
 }
 function cameraFeed(videoName, position) {
-  return `<button class="camera-feed" type="button" data-camera-label="Camera ${String(position).padStart(2, "0")}" aria-label="Expand camera ${position}" aria-haspopup="dialog"><video autoplay muted loop playsinline aria-label="${videoName} demo footage"><source src="/demo-video/${videoName}.mp4" type="video/mp4"></video><span class="camera-expand"><span>Camera ${String(position).padStart(2, "0")}</span>${icon("open_in_full")}</span></button>`;
+  return `<button class="camera-feed is-loading" type="button" disabled data-camera-label="Camera ${String(position).padStart(2, "0")}" aria-label="Expand camera ${position}" aria-haspopup="dialog"><video preload="auto" muted loop playsinline src="/demo-video/${videoName}.mp4" aria-label="${videoName} demo footage"></video><span class="camera-load-status" role="status">Preparing cameras&hellip;</span><span class="camera-expand"><span>Camera ${String(position).padStart(2, "0")}</span>${icon("open_in_full")}</span></button>`;
+}
+
+function waitForCamera(video, signal) {
+  return new Promise(resolve => {
+    if (signal.aborted) { resolve(false); return; }
+    if (video.readyState >= 3) { resolve(true); return; }
+    const finish = ready => {
+      clearTimeout(timeout);
+      video.removeEventListener("canplay", onReady);
+      video.removeEventListener("error", onError);
+      signal.removeEventListener("abort", onError);
+      resolve(ready);
+    };
+    const onReady = () => finish(true);
+    const onError = () => finish(false);
+    const timeout = setTimeout(onError, 20000);
+    video.addEventListener("canplay", onReady);
+    video.addEventListener("error", onError);
+    signal.addEventListener("abort", onError, { once:true });
+    video.load();
+  });
+}
+
+async function initialiseCameraFeeds(retryButton) {
+  cameraLoadController?.abort();
+  cameraLoadController = new AbortController();
+  const { signal } = cameraLoadController;
+  const feeds = $$(".camera-feed", app);
+  const videos = feeds.map(feed => $("video", feed));
+  retryButton.hidden = true;
+  feeds.forEach((feed, index) => {
+    videos[index].pause();
+    feed.disabled = true;
+    feed.classList.remove("is-unavailable");
+    feed.classList.add("is-loading");
+    $(".camera-load-status", feed).textContent = "Preparing cameras…";
+  });
+  const readiness = await Promise.all(videos.map(video => waitForCamera(video, signal)));
+  if (signal.aborted) return;
+  const markUnavailable = feed => {
+    feed.disabled = true;
+    feed.classList.add("is-unavailable");
+    $(".camera-load-status", feed).textContent = "Video unavailable. Retry cameras.";
+    retryButton.hidden = false;
+  };
+  feeds.forEach((feed, index) => {
+    feed.classList.remove("is-loading");
+    if (!readiness[index]) { markUnavailable(feed); return; }
+    feed.disabled = false;
+    videos[index].currentTime = 0;
+    videos[index].play().catch(() => { if (!signal.aborted) markUnavailable(feed); });
+  });
 }
 
 function openCameraViewer(feed) {
@@ -343,7 +404,7 @@ function openCameraViewer(feed) {
   video.setAttribute("aria-label", `${feed.dataset.cameraLabel} demo footage`);
   video.muted = true;
   video.onloadedmetadata = () => { video.currentTime = playbackTime; };
-  video.src = sourceVideo.currentSrc || $("source", sourceVideo).src;
+  video.src = sourceVideo.currentSrc || sourceVideo.src;
   viewer.showModal();
 }
 
@@ -419,6 +480,7 @@ function openIncident(record) {
 function closeModal() { $("#modalBackdrop").hidden = true; document.body.style.overflow = ""; }
 
 function navigate(page) {
+  cameraLoadController?.abort();
   currentPage = pageMeta[page] ? page : "overview";
   $("#headerTitle").textContent = pageMeta[currentPage];
   $$(".nav-link[data-page]").forEach(link => link.classList.toggle("active", link.dataset.page === currentPage));
@@ -453,4 +515,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal()
 const now = new Date();
 $("#currentDate").textContent = new Intl.DateTimeFormat("en-MY", { weekday:"short", day:"2-digit", month:"short", year:"numeric" }).format(now);
 initialiseTheme();
+document.fonts.load('24px "Material Symbols Rounded"').then(fonts => {
+  if (fonts.length) document.documentElement.classList.add("icons-ready");
+}).catch(() => {});
 navigate(location.hash.slice(1) || "overview");
