@@ -297,10 +297,10 @@ function renderCamera() {
     <section class="panel filter-panel"><form class="search-row" id="cameraSearch"><label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="cameraPerson" placeholder="Search employee name or ID"></label><select class="field"><option>All zones</option><option>Assembly</option><option>Packaging</option><option>Warehouse</option></select><select class="field"><option>All cameras</option><option>CAM-04</option><option>CAM-11</option><option>CAM-18</option></select><select class="field"><option>Live now</option><option>Last hour</option><option>Today</option></select><button class="button primary">${icon("my_location")} Track</button></form></section>
     <div class="camera-layout">
       <section class="panel"><div class="panel-head"><div><h2>Live camera matrix</h2><p>Selected identity: Aiman Hakim &middot; EMP-1042</p></div>${badge("Live tracking")}</div><div class="camera-grid">
-        ${cameraFeed("camera-01")}
-        ${cameraFeed("camera-02")}
-        ${cameraFeed("camera-02")}
-        ${cameraFeed("camera-01")}
+        ${cameraFeed("camera-01", 1)}
+        ${cameraFeed("camera-02", 2)}
+        ${cameraFeed("camera-02", 3)}
+        ${cameraFeed("camera-01", 4)}
       </div></section>
       <aside class="panel"><div class="panel-head"><div><h2>Identity journey</h2><p>Camera-to-camera movement</p></div></div><div class="route-timeline">
         ${routeEvent("10:42", "CAM-04 &middot; Assembly Line A", "Identity confidence 96%")}
@@ -309,11 +309,42 @@ function renderCamera() {
         ${routeEvent("07:03", "CAM-01 &middot; Main Gate", "Shift entry recorded")}
       </div><button class="button primary" data-page-jump="route" style="width:100%;margin-top:16px">${icon("route")} View on floorplan</button></aside>
     </div>
+    <dialog class="camera-viewer" id="cameraViewer" aria-labelledby="cameraViewerTitle">
+      <div class="camera-viewer-head"><div><h2 id="cameraViewerTitle">Camera view</h2><p>Demo footage</p></div><button class="icon-button" id="cameraViewerClose" type="button" aria-label="Close camera view" autofocus>${icon("close")}</button></div>
+      <video id="cameraViewerVideo" autoplay muted loop playsinline controls></video>
+    </dialog>
   </section>`;
   $("#cameraSearch").addEventListener("submit", e => { e.preventDefault(); showToast($("#cameraPerson").value ? `Tracking ${$("#cameraPerson").value}` : "Showing all tracked employees"); });
+  $$(".camera-feed", app).forEach(feed => feed.addEventListener("click", () => openCameraViewer(feed)));
+  const viewer = $("#cameraViewer");
+  $("#cameraViewerClose").addEventListener("click", () => viewer.close());
+  viewer.addEventListener("click", e => {
+    const bounds = viewer.getBoundingClientRect();
+    if (e.target === viewer && (e.clientX < bounds.left || e.clientX > bounds.right || e.clientY < bounds.top || e.clientY > bounds.bottom)) viewer.close();
+  });
+  viewer.addEventListener("close", () => {
+    const video = $("#cameraViewerVideo", viewer);
+    video.pause();
+    video.onloadedmetadata = null;
+    video.removeAttribute("src");
+    video.load();
+  });
 }
-function cameraFeed(videoName) {
-  return `<div class="camera-feed"><video autoplay muted loop playsinline aria-label="${videoName} demo footage"><source src="/demo-video/${videoName}.mp4" type="video/mp4"></video></div>`;
+function cameraFeed(videoName, position) {
+  return `<button class="camera-feed" type="button" data-camera-label="Camera ${String(position).padStart(2, "0")}" aria-label="Expand camera ${position}" aria-haspopup="dialog"><video autoplay muted loop playsinline aria-label="${videoName} demo footage"><source src="/demo-video/${videoName}.mp4" type="video/mp4"></video><span class="camera-expand"><span>Camera ${String(position).padStart(2, "0")}</span>${icon("open_in_full")}</span></button>`;
+}
+
+function openCameraViewer(feed) {
+  const viewer = $("#cameraViewer");
+  const sourceVideo = $("video", feed);
+  const video = $("#cameraViewerVideo", viewer);
+  const playbackTime = sourceVideo.currentTime;
+  $("#cameraViewerTitle").textContent = feed.dataset.cameraLabel;
+  video.setAttribute("aria-label", `${feed.dataset.cameraLabel} demo footage`);
+  video.muted = true;
+  video.onloadedmetadata = () => { video.currentTime = playbackTime; };
+  video.src = sourceVideo.currentSrc || $("source", sourceVideo).src;
+  viewer.showModal();
 }
 
 function renderRoute() {
