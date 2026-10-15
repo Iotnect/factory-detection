@@ -310,7 +310,7 @@ function renderCamera() {
       </div><button class="button primary" data-page-jump="route" style="width:100%;margin-top:16px">${icon("route")} View on floorplan</button></aside>
     </div>
     <dialog class="camera-viewer" id="cameraViewer" aria-labelledby="cameraViewerTitle">
-      <div class="camera-viewer-head"><div><h2 id="cameraViewerTitle">Camera view</h2><p>Demo footage</p></div><button class="icon-button" id="cameraViewerClose" type="button" aria-label="Close camera view" autofocus>${icon("close")}</button></div>
+      <div class="camera-viewer-head"><div><h2 id="cameraViewerTitle">Camera view</h2><p>Demo footage</p></div><button class="icon-button" id="cameraViewerClose" type="button" aria-label="Close camera view">${icon("close")}</button></div>
       <video id="cameraViewerVideo" autoplay muted loop playsinline controls></video>
     </dialog>
   </section>`;
