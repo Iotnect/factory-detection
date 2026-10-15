@@ -324,14 +324,14 @@ function renderCamera() {
   app.innerHTML = `<section class="page">
     ${pageHead(`${onlineCount} cameras online · ${offlineCount} offline`, "Camera tracking", "Follow employees across camera zones using visual re-identification.", `<button class="button">${icon("grid_view")} Camera wall</button>`)}
     <div class="metric-grid">${metric("Online", onlineCount, "videocam", "good", "Demo feeds available", "online")}${metric("Offline", offlineCount, "videocam_off", "alert", "camera-05 offline", "offline")}${metric("Tracked people", demoTrackedPeople.length, "person_pin_circle", "", "View tracked people", "people")}${metric("Re-ID accuracy", "97.4%", "center_focus_strong", "good", "+0.6% this week")}</div>
-    <section class="panel filter-panel"><form class="search-row" id="cameraSearch"><label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="cameraPerson" placeholder="Search employee name or ID"></label><select class="field"><option>All zones</option><option>Assembly</option><option>Packaging</option><option>Warehouse</option></select><select class="field"><option>All cameras</option><option>CAM-04</option><option>CAM-11</option><option>CAM-18</option></select><select class="field"><option>Live now</option><option>Last hour</option><option>Today</option></select><button class="button primary">${icon("my_location")} Track</button></form></section>
+    <section class="panel filter-panel"><form class="search-row" id="cameraSearch"><label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="cameraPerson" placeholder="Search employee name or ID"></label><select class="field" id="cameraLocation" aria-label="Camera location"><option value="">All locations</option>${[...new Set(demoCameras.map(camera => camera.location))].map(location => `<option value="${escapeHtml(location)}">${escapeHtml(location)}</option>`).join("")}</select><select class="field" id="cameraFilter" aria-label="Camera">${cameraFilterOptions()}</select><select class="field" aria-label="Time range"><option>Live now</option><option>Last hour</option><option>Today</option></select><button class="button primary">${icon("my_location")} Track</button></form></section>
     <div class="camera-layout">
-      <section class="panel"><div class="panel-head"><div><h2>Live camera matrix</h2><p>Selected identity: Aiman Hakim &middot; EMP-1042</p></div>${badge("Live tracking")}</div><div class="camera-grid">
+      <section class="panel"><div class="panel-head"><div><h2>Live camera matrix</h2><p>Selected identity: Aiman Hakim &middot; EMP-1042</p><p id="cameraGridStatus" role="status">Showing 4 cameras</p></div>${badge("Live tracking")}</div><div class="camera-grid">
         ${cameraFeed("camera-01", 1)}
         ${cameraFeed("camera-02", 2)}
         ${cameraFeed("camera-02", 3)}
         ${cameraFeed("camera-01", 4)}
-      </div></section>
+      </div><div class="empty-state" id="cameraGridEmpty" hidden>${icon("videocam_off")}<strong>No live footage</strong><p>The camera at this location is offline.</p></div></section>
       <aside class="panel"><div class="panel-head"><div><h2>Identity journey</h2><p>Camera-to-camera movement</p></div></div><div class="route-timeline">
         ${routeEvent("10:42", "CAM-04 &middot; Assembly Line A", "Identity confidence 96%")}
         ${routeEvent("10:36", "CAM-03 &middot; East Corridor", "Direction: west")}
@@ -350,7 +350,12 @@ function renderCamera() {
   </section>`;
   $$("[data-camera-summary]", app).forEach(button => button.addEventListener("click", () => openCameraSummary(button.dataset.cameraSummary)));
   bindCameraDialog($("#cameraSummary"), $("#cameraSummaryClose"));
-  $("#cameraSearch").addEventListener("submit", e => { e.preventDefault(); showToast($("#cameraPerson").value ? `Tracking ${$("#cameraPerson").value}` : "Showing all tracked employees"); });
+  $("#cameraSearch").addEventListener("submit", e => { e.preventDefault(); applyCameraFilters(); if ($("#cameraPerson").value) showToast(`Tracking ${$("#cameraPerson").value}`); });
+  $("#cameraLocation").addEventListener("change", () => {
+    $("#cameraFilter").innerHTML = cameraFilterOptions($("#cameraLocation").value);
+    applyCameraFilters();
+  });
+  $("#cameraFilter").addEventListener("change", applyCameraFilters);
   $$(".camera-feed", app).forEach(feed => feed.addEventListener("click", () => openCameraViewer(feed)));
   const retryButton = document.createElement("button");
   retryButton.type = "button";
@@ -372,7 +377,30 @@ function renderCamera() {
 }
 function cameraFeed(videoName, position) {
   const cameraLabel = `camera-${String(position).padStart(2, "0")}`;
-  return `<button class="camera-feed is-loading" type="button" disabled data-camera-label="${cameraLabel}" aria-label="Expand ${cameraLabel}" aria-haspopup="dialog"><video preload="auto" muted loop playsinline src="/demo-video/${videoName}.mp4" aria-label="${cameraLabel} demo footage"></video><span class="camera-load-status" role="status">Preparing cameras&hellip;</span><span class="camera-expand"><span>${cameraLabel}</span>${icon("open_in_full")}</span></button>`;
+  const camera = demoCameras.find(camera => camera.id === cameraLabel);
+  return `<button class="camera-feed is-loading" type="button" disabled data-camera-label="${cameraLabel}" data-camera-location="${escapeHtml(camera.location)}" aria-label="Expand ${cameraLabel}, ${escapeHtml(camera.location)}" aria-haspopup="dialog"><video preload="auto" muted loop playsinline src="/demo-video/${videoName}.mp4" aria-label="${cameraLabel} demo footage"></video><span class="camera-load-status" role="status">Preparing cameras&hellip;</span><span class="camera-expand"><span>${cameraLabel}<small>${escapeHtml(camera.location)}</small></span>${icon("open_in_full")}</span></button>`;
+}
+
+function cameraFilterOptions(location="") {
+  return `<option value="">All cameras</option>${demoCameras.filter(camera => !location || camera.location === location).map(camera => `<option value="${camera.id}">${camera.id}${camera.status === "Offline" ? " (Offline)" : ""}</option>`).join("")}`;
+}
+
+function applyCameraFilters() {
+  const location = $("#cameraLocation").value;
+  const cameraId = $("#cameraFilter").value;
+  let visibleCount = 0;
+  $$(".camera-feed", app).forEach(feed => {
+    feed.hidden = Boolean((location && feed.dataset.cameraLocation !== location) || (cameraId && feed.dataset.cameraLabel !== cameraId));
+    const video = $("video", feed);
+    if (feed.hidden) { video.pause(); return; }
+    visibleCount++;
+    if (!feed.disabled) video.play().catch(() => {});
+  });
+  const grid = $(".camera-grid", app);
+  grid.classList.toggle("is-single", visibleCount === 1);
+  grid.hidden = visibleCount === 0;
+  $("#cameraGridEmpty").hidden = visibleCount !== 0;
+  $("#cameraGridStatus").textContent = `${location || "All locations"} · Showing ${visibleCount} camera${visibleCount === 1 ? "" : "s"}`;
 }
 
 function bindCameraDialog(dialog, closeButton) {
@@ -447,7 +475,7 @@ async function initialiseCameraFeeds(retryButton) {
     if (!readiness[index]) { markUnavailable(feed); return; }
     feed.disabled = false;
     videos[index].currentTime = 0;
-    videos[index].play().catch(() => { if (!signal.aborted) markUnavailable(feed); });
+    if (!feed.hidden) videos[index].play().catch(() => { if (!signal.aborted) markUnavailable(feed); });
   });
 }
 
