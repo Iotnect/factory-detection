@@ -556,9 +556,11 @@ function openIncident(record) {
   if (!record) record = people[0];
   const isAbsence = record.duration;
   const phoneRecordIndex = people.findIndex(person => person.id === record.id);
-  const evidence = !isAbsence && phoneRecordIndex >= 0
-    ? `<img class="evidence-image" src="/evidence-demo/evidence-0${phoneRecordIndex % 2 + 1}.png" alt="Demo phone usage evidence for ${escapeHtml(record.name)}">`
-    : noEvidence();
+  const evidence = isAbsence
+    ? `<img class="evidence-image" src="/evidence-demo/evidence-post%20absence.png" alt="Demo post and absence evidence for ${escapeHtml(record.name)}">`
+    : phoneRecordIndex >= 0
+      ? `<img class="evidence-image" src="/evidence-demo/evidence-0${phoneRecordIndex % 2 + 1}.png" alt="Demo phone usage evidence for ${escapeHtml(record.name)}">`
+      : noEvidence();
   $("#modalContent").innerHTML = `<div class="modal-inner"><div class="modal-title-row"><span class="monitor-icon">${icon(isAbsence ? "person_off" : "smartphone")}</span><div><span class="status-label">Case ${record.id}-${record.time.replaceAll(":","")}</span><h2 id="modalTitle">${record.type}</h2><p>${record.name} &middot; ${record.id}</p></div></div>
     <div class="detail-grid"><div class="evidence">${evidence}</div>
       <div class="detail-stack"><div class="detail-block"><h3>Incident details</h3><div class="detail-list"><div><small>Employee</small><strong>${record.name}</strong></div><div><small>Department</small><strong>${record.dept}</strong></div><div><small>Location</small><strong>${record.location}</strong></div><div><small>Camera</small><strong>${record.camera}</strong></div><div><small>${isAbsence ? "Duration" : "AI confidence"}</small><strong>${isAbsence ? record.duration : record.confidence + "%"}</strong></div></div></div></div></div>`;
