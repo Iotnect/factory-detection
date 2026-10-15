@@ -25,6 +25,28 @@ const pageMeta = {
   camera:"Camera tracking", route:"Floorplan route tracking", reports:"Reports", settings:"Settings"
 };
 
+const demoCameras = [
+  { id:"camera-01", location:"Machining Floor", status:"Online" },
+  { id:"camera-02", location:"Production Floor", status:"Online" },
+  { id:"camera-03", location:"Warehouse", status:"Offline" }
+];
+const demoTrackedPeople = [
+  ...people.map(({ id, name, dept }) => ({ id, name, dept })),
+  { id:"EMP-2208", name:"Farah Nadia", dept:"Packaging" },
+  { id:"EMP-3390", name:"Harith Iskandar", dept:"Machining" },
+  { id:"EMP-4416", name:"Mei Ling", dept:"Quality" },
+  { id:"EMP-5277", name:"Kavitha Rao", dept:"Warehouse" },
+  { id:"EMP-1063", name:"Amirul Azman", dept:"Assembly" },
+  { id:"EMP-2094", name:"Nadia Zulkifli", dept:"Packaging" },
+  { id:"EMP-3205", name:"Jason Tan", dept:"Machining" },
+  { id:"EMP-4031", name:"Aisyah Rahman", dept:"Quality" },
+  { id:"EMP-5350", name:"Suresh Nair", dept:"Warehouse" },
+  { id:"EMP-1088", name:"Syafiq Roslan", dept:"Assembly" },
+  { id:"EMP-2116", name:"Emily Lim", dept:"Packaging" },
+  { id:"EMP-3220", name:"Hafiz Abdullah", dept:"Machining" },
+  { id:"EMP-4057", name:"Priya Devi", dept:"Quality" }
+].map((person, index) => ({ ...person, camera:index % 2 === 0 ? "camera-01" : "camera-02" }));
+
 const $ = (selector, root=document) => root.querySelector(selector);
 const $$ = (selector, root=document) => [...root.querySelectorAll(selector)];
 const app = $("#app");
@@ -35,10 +57,11 @@ let cameraLoadController;
 const themeStorageKey = "neovision-theme";
 
 function icon(name) { return `<span class="material-symbols-rounded">${name}</span>`; }
+function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, character => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" })[character]); }
 function noFootage() { return `<div class="footage-empty">${icon("videocam_off")}<p>No footage available at the moment</p></div>`; }
 function noEvidence() { return `<div class="footage-empty">${icon("image_not_supported")}<p>No evidence shown</p></div>`; }
 function badge(value) {
-  const cls = /critical|unresolved|confirmed|alert/i.test(value) ? "red" : /warning|review/i.test(value) ? "amber" : /resolved|online|normal/i.test(value) ? "green" : "";
+  const cls = /critical|unresolved|confirmed|alert|offline/i.test(value) ? "red" : /warning|review/i.test(value) ? "amber" : /resolved|online|normal|active/i.test(value) ? "green" : "";
   return `<span class="badge ${cls}">${value}</span>`;
 }
 function showToast(message) {
@@ -47,8 +70,10 @@ function showToast(message) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 2600);
 }
-function metric(label, value, iconName, tone="", trend="Live telemetry") {
-  return `<article class="metric-card ${tone}"><div><small>${label}</small><strong>${value}</strong><span class="trend ${tone === "alert" ? "down" : ""}">${trend}</span></div><span class="metric-icon">${icon(iconName)}</span></article>`;
+function metric(label, value, iconName, tone="", trend="Live telemetry", cameraSummary="") {
+  const tag = cameraSummary ? "button" : "article";
+  const attributes = cameraSummary ? ` type="button" data-camera-summary="${cameraSummary}" aria-haspopup="dialog" aria-label="${label}: ${value}. View list"` : "";
+  return `<${tag} class="metric-card ${tone}${cameraSummary ? " metric-card-clickable" : ""}"${attributes}><div><small>${label}</small><strong>${value}</strong><span class="trend ${tone === "alert" ? "down" : ""}">${trend}</span></div><span class="metric-icon">${icon(iconName)}</span></${tag}>`;
 }
 
 function pageHead(kicker, title, copy, action="") {
@@ -292,9 +317,11 @@ function bindDetectionFilters(records, type) {
 }
 
 function renderCamera() {
+  const onlineCount = demoCameras.filter(camera => camera.status === "Online").length;
+  const offlineCount = demoCameras.filter(camera => camera.status === "Offline").length;
   app.innerHTML = `<section class="page">
-    ${pageHead("24 cameras connected", "Camera tracking", "Follow employees across camera zones using visual re-identification.", `<button class="button">${icon("grid_view")} Camera wall</button>`)}
-    <div class="metric-grid">${metric("Online", "24", "videocam", "good", "96% availability")}${metric("Offline", "1", "videocam_off", "alert", "CAM-22 service due")}${metric("Tracked people", "18", "person_pin_circle")}${metric("Re-ID accuracy", "97.4%", "center_focus_strong", "good", "+0.6% this week")}</div>
+    ${pageHead(`${onlineCount} cameras online · ${offlineCount} offline`, "Camera tracking", "Follow employees across camera zones using visual re-identification.", `<button class="button">${icon("grid_view")} Camera wall</button>`)}
+    <div class="metric-grid">${metric("Online", onlineCount, "videocam", "good", "Demo feeds available", "online")}${metric("Offline", offlineCount, "videocam_off", "alert", "camera-03 offline", "offline")}${metric("Tracked people", demoTrackedPeople.length, "person_pin_circle", "", "View tracked people", "people")}${metric("Re-ID accuracy", "97.4%", "center_focus_strong", "good", "+0.6% this week")}</div>
     <section class="panel filter-panel"><form class="search-row" id="cameraSearch"><label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="cameraPerson" placeholder="Search employee name or ID"></label><select class="field"><option>All zones</option><option>Assembly</option><option>Packaging</option><option>Warehouse</option></select><select class="field"><option>All cameras</option><option>CAM-04</option><option>CAM-11</option><option>CAM-18</option></select><select class="field"><option>Live now</option><option>Last hour</option><option>Today</option></select><button class="button primary">${icon("my_location")} Track</button></form></section>
     <div class="camera-layout">
       <section class="panel"><div class="panel-head"><div><h2>Live camera matrix</h2><p>Selected identity: Aiman Hakim &middot; EMP-1042</p></div>${badge("Live tracking")}</div><div class="camera-grid">
@@ -314,7 +341,13 @@ function renderCamera() {
       <div class="camera-viewer-head"><div><h2 id="cameraViewerTitle">Camera view</h2><p>Demo footage</p></div><button class="icon-button" id="cameraViewerClose" type="button" aria-label="Close camera view">${icon("close")}</button></div>
       <video id="cameraViewerVideo" autoplay muted loop playsinline controls></video>
     </dialog>
+    <dialog class="camera-viewer camera-summary" id="cameraSummary" aria-labelledby="cameraSummaryTitle">
+      <div class="camera-viewer-head"><div><h2 id="cameraSummaryTitle">Camera status</h2><p id="cameraSummaryDescription"></p></div><button class="icon-button" id="cameraSummaryClose" type="button" aria-label="Close camera list">${icon("close")}</button></div>
+      <div class="camera-summary-content" id="cameraSummaryContent"></div>
+    </dialog>
   </section>`;
+  $$("[data-camera-summary]", app).forEach(button => button.addEventListener("click", () => openCameraSummary(button.dataset.cameraSummary)));
+  bindCameraDialog($("#cameraSummary"), $("#cameraSummaryClose"));
   $("#cameraSearch").addEventListener("submit", e => { e.preventDefault(); showToast($("#cameraPerson").value ? `Tracking ${$("#cameraPerson").value}` : "Showing all tracked employees"); });
   $$(".camera-feed", app).forEach(feed => feed.addEventListener("click", () => openCameraViewer(feed)));
   const retryButton = document.createElement("button");
@@ -326,11 +359,7 @@ function renderCamera() {
   retryButton.addEventListener("click", () => initialiseCameraFeeds(retryButton));
   initialiseCameraFeeds(retryButton);
   const viewer = $("#cameraViewer");
-  $("#cameraViewerClose").addEventListener("click", () => viewer.close());
-  viewer.addEventListener("click", e => {
-    const bounds = viewer.getBoundingClientRect();
-    if (e.target === viewer && (e.clientX < bounds.left || e.clientX > bounds.right || e.clientY < bounds.top || e.clientY > bounds.bottom)) viewer.close();
-  });
+  bindCameraDialog(viewer, $("#cameraViewerClose"));
   viewer.addEventListener("close", () => {
     const video = $("#cameraViewerVideo", viewer);
     video.pause();
@@ -340,7 +369,31 @@ function renderCamera() {
   });
 }
 function cameraFeed(videoName, position) {
-  return `<button class="camera-feed is-loading" type="button" disabled data-camera-label="Camera ${String(position).padStart(2, "0")}" aria-label="Expand camera ${position}" aria-haspopup="dialog"><video preload="auto" muted loop playsinline src="/demo-video/${videoName}.mp4" aria-label="${videoName} demo footage"></video><span class="camera-load-status" role="status">Preparing cameras&hellip;</span><span class="camera-expand"><span>Camera ${String(position).padStart(2, "0")}</span>${icon("open_in_full")}</span></button>`;
+  return `<button class="camera-feed is-loading" type="button" disabled data-camera-label="${videoName}" aria-label="Expand ${videoName}, tile ${position}" aria-haspopup="dialog"><video preload="auto" muted loop playsinline src="/demo-video/${videoName}.mp4" aria-label="${videoName} demo footage"></video><span class="camera-load-status" role="status">Preparing cameras&hellip;</span><span class="camera-expand"><span>${videoName}</span>${icon("open_in_full")}</span></button>`;
+}
+
+function bindCameraDialog(dialog, closeButton) {
+  closeButton.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", e => {
+    const bounds = dialog.getBoundingClientRect();
+    if (e.target === dialog && (e.clientX < bounds.left || e.clientX > bounds.right || e.clientY < bounds.top || e.clientY > bounds.bottom)) dialog.close();
+  });
+}
+
+function openCameraSummary(type) {
+  const isPeople = type === "people";
+  const status = type === "online" ? "Online" : "Offline";
+  const cameras = demoCameras.filter(camera => camera.status === status);
+  const checkedAt = new Intl.DateTimeFormat("en-MY", {
+    timeZone:"Asia/Kuala_Lumpur", day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false
+  }).format(new Date());
+  $("#cameraSummaryTitle").textContent = isPeople ? `Tracked people (${demoTrackedPeople.length})` : `${status} cameras (${cameras.length})`;
+  $("#cameraSummaryDescription").textContent = isPeople ? "Demo tracking list · Camera assignment is simulated." : "Demo camera status · Last check uses the current time (MYT).";
+  $("#cameraSummaryClose").setAttribute("aria-label", isPeople ? "Close tracked people list" : "Close camera list");
+  $("#cameraSummaryContent").innerHTML = isPeople
+    ? `<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Employee ID</th><th>Department</th><th>Camera</th><th>Status</th></tr></thead><tbody>${demoTrackedPeople.map(person => `<tr><td><strong>${escapeHtml(person.name)}</strong></td><td class="mono">${escapeHtml(person.id)}</td><td>${escapeHtml(person.dept)}</td><td class="mono">${person.camera}</td><td>${badge("Active")}</td></tr>`).join("")}</tbody></table></div>`
+    : `<div class="table-wrap"><table><thead><tr><th>Camera</th><th>Location</th><th>Status</th><th>Last check (MYT)</th></tr></thead><tbody>${cameras.map(camera => `<tr><td class="mono"><strong>${camera.id}</strong></td><td>${camera.location}</td><td>${badge(camera.status)}</td><td class="mono">${checkedAt}</td></tr>`).join("")}</tbody></table></div>`;
+  $("#cameraSummary").showModal();
 }
 
 function waitForCamera(video, signal) {
