@@ -22,6 +22,10 @@
       "dest": "/public/demo-video/$1"
     },
     {
+      "src": "/evidence-demo/(.*)",
+      "dest": "/public/evidence-demo/$1"
+    },
+    {
       "src": "/favicon.ico",
       "dest": "/public/favicon.ico"
     },
