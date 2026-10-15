@@ -297,10 +297,10 @@ function renderCamera() {
     <section class="panel filter-panel"><form class="search-row" id="cameraSearch"><label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="cameraPerson" placeholder="Search employee name or ID"></label><select class="field"><option>All zones</option><option>Assembly</option><option>Packaging</option><option>Warehouse</option></select><select class="field"><option>All cameras</option><option>CAM-04</option><option>CAM-11</option><option>CAM-18</option></select><select class="field"><option>Live now</option><option>Last hour</option><option>Today</option></select><button class="button primary">${icon("my_location")} Track</button></form></section>
     <div class="camera-layout">
       <section class="panel"><div class="panel-head"><div><h2>Live camera matrix</h2><p>Selected identity: Aiman Hakim &middot; EMP-1042</p></div>${badge("Live tracking")}</div><div class="camera-grid">
-        ${cameraFeed()}
-        ${cameraFeed()}
-        ${cameraFeed()}
-        ${cameraFeed()}
+        ${cameraFeed("camera-01")}
+        ${cameraFeed("camera-02")}
+        ${cameraFeed("camera-02")}
+        ${cameraFeed("camera-01")}
       </div></section>
       <aside class="panel"><div class="panel-head"><div><h2>Identity journey</h2><p>Camera-to-camera movement</p></div></div><div class="route-timeline">
         ${routeEvent("10:42", "CAM-04 &middot; Assembly Line A", "Identity confidence 96%")}
@@ -312,8 +312,8 @@ function renderCamera() {
   </section>`;
   $("#cameraSearch").addEventListener("submit", e => { e.preventDefault(); showToast($("#cameraPerson").value ? `Tracking ${$("#cameraPerson").value}` : "Showing all tracked employees"); });
 }
-function cameraFeed() {
-  return `<div class="camera-feed">${noFootage()}</div>`;
+function cameraFeed(videoName) {
+  return `<div class="camera-feed"><video autoplay muted loop playsinline aria-label="${videoName} demo footage"><source src="/demo-video/${videoName}.mp4" type="video/mp4"></video></div>`;
 }
 
 function renderRoute() {
