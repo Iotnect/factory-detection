@@ -215,6 +215,41 @@ function bindEmployeeFilters() {
   $("#clearEmployeeFilters").addEventListener("click", () => { $("#employeeSearch").reset(); renderEmployeeTable(employeeDirectory); });
 }
 
+function referenceImageUpload(employee = {}) {
+  return `<label class="reference-upload"><span class="reference-upload__icon">${icon("add_a_photo")}</span><span><strong>AI reference image</strong><small>Choose a clear front-facing image (PNG or JPEG, up to 5 MB).</small><small data-reference-filename>${escapeHtml(employee.referenceImageName || "No image selected")}</small></span><input name="referenceImage" type="file" accept="image/png,image/jpeg"><span class="button small">${employee.referenceImageUrl ? "Replace image" : "Choose image"}</span></label>
+    <img class="reference-image-preview" data-reference-preview src="${employee.referenceImageUrl ? escapeHtml(employee.referenceImageUrl) : ""}" alt="AI reference preview" ${employee.referenceImageUrl ? "" : "hidden"}>`;
+}
+
+function bindReferenceImageUpload(form, employee = {}) {
+  const input = form.elements.referenceImage;
+  const preview = $('[data-reference-preview]', form);
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    const error = file && (!["image/png", "image/jpeg"].includes(file.type) ? "Choose a PNG or JPEG image." : file.size > 5 * 1024 * 1024 ? "Image must be 5 MB or smaller." : "");
+    input.setCustomValidity(error || "");
+    $('[data-reference-filename]', form).textContent = error || file?.name || employee.referenceImageName || "No image selected";
+    if (file && !error) {
+      const previewUrl = URL.createObjectURL(file);
+      preview.onload = preview.onerror = () => URL.revokeObjectURL(previewUrl);
+      preview.src = previewUrl;
+      preview.hidden = false;
+    } else {
+      preview.src = employee.referenceImageUrl || "";
+      preview.hidden = !employee.referenceImageUrl;
+    }
+    if (error) input.reportValidity();
+  });
+}
+
+function saveReferenceImage(form, employee) {
+  const file = form.elements.referenceImage.files[0];
+  if (!file) return;
+  if (employee.referenceImageUrl) URL.revokeObjectURL(employee.referenceImageUrl);
+  employee.referenceImageUrl = URL.createObjectURL(file);
+  employee.referenceImageName = file.name;
+  employee.reference = "Enrolled";
+}
+
 function openEmployeeProfile(employee) {
   if (!employee) return;
   const employeeMovements = movementRecords.filter(record => record.employeeId === employee.id);
@@ -222,7 +257,7 @@ function openEmployeeProfile(employee) {
     <div class="modal-title-row">${employeeAvatar(employee.name, true)}<div><span class="status-label">${escapeHtml(employee.id)}</span><h2 id="modalTitle">${escapeHtml(employee.name)}</h2><p>${escapeHtml(employee.role)} &middot; ${escapeHtml(employee.department)}</p></div></div>
     <div class="employee-profile-grid">
       <section class="detail-block"><h3>Employment details</h3><div class="detail-list"><div><small>Status</small><strong>${badge(employee.status)}</strong></div><div><small>Shift</small><strong>${escapeHtml(employee.shift)}</strong></div><div><small>Joined</small><strong>${escapeHtml(employee.joined)}</strong></div><div><small>Last known area</small><strong>${escapeHtml(employee.lastSeen)}</strong></div></div></section>
-      <section class="detail-block"><h3>AI identity profile</h3><div class="ai-profile-summary"><span class="ai-profile-icon">${icon(employee.reference === "Missing" ? "no_accounts" : "face")}</span><div><strong>${escapeHtml(employee.reference)}</strong><small>${employee.reference === "Enrolled" ? "Reference profile available for person re-identification." : "Reference image is required before AI tracking can be enabled."}</small></div></div></section>
+      <section class="detail-block"><h3>AI identity profile</h3><div class="ai-profile-summary"><span class="ai-profile-icon">${icon(employee.reference === "Missing" ? "no_accounts" : "face")}</span><div><strong>${escapeHtml(employee.reference)}</strong><small>${employee.reference === "Enrolled" ? "Reference profile available for person re-identification." : "Reference image is required before AI tracking can be enabled."}</small></div></div>${employee.referenceImageUrl ? `<img class="reference-image-preview" src="${escapeHtml(employee.referenceImageUrl)}" alt="AI reference image for ${escapeHtml(employee.name)}"><p>${escapeHtml(employee.referenceImageName)}</p>` : ""}</section>
     </div>
     <section class="employee-history"><div class="panel-head"><div><h2>Movement history</h2><p>Recent AI-inferred movements linked to this employee.</p></div><span class="result-count">${employeeMovements.length} records</span></div>
       ${employeeMovements.length ? `<div class="table-wrap"><table><thead><tr><th>Date & time</th><th>From</th><th>To</th><th>Camera</th><th>Event</th><th>Confidence</th></tr></thead><tbody>${employeeMovements.map(record => `<tr><td>${escapeHtml(record.date)}<br><span class="mono">${escapeHtml(record.time)}</span></td><td>${escapeHtml(record.from)}</td><td>${escapeHtml(record.to)}</td><td class="mono">${escapeHtml(record.camera)}</td><td>${escapeHtml(record.event)}</td><td>${record.confidence}%</td></tr>`).join("")}</tbody></table></div>` : `<div class="employee-history-empty">${icon("route")}<p>No movement records available for this employee.</p></div>`}
@@ -254,17 +289,20 @@ function openEmployeeEditor(employee) {
         <label><span>Last known area</span><input class="field" name="lastSeen" value="${escapeHtml(employee.lastSeen)}" required></label>
         <label><span>AI reference</span><select class="field" name="reference" required>${["Enrolled", "Missing"].map(reference => `<option${reference === employee.reference ? " selected" : ""}>${reference}</option>`).join("")}</select></label>
       </div>
+      ${referenceImageUpload(employee)}
       <div class="modal-actions"><button class="button primary" type="submit">${icon("save")} Save changes</button><button class="button" type="button" id="cancelEmployeeEdit">Cancel</button></div>
     </form>
   </div>`;
 
   $("#cancelEmployeeEdit").addEventListener("click", () => openEmployeeProfile(employee));
+  bindReferenceImageUpload($("#employeeEditForm"), employee);
   $("#employeeEditForm").addEventListener("submit", event => updateEmployee(event, employee));
 }
 
 function updateEmployee(event, employee) {
   event.preventDefault();
   const form = event.currentTarget;
+  if (!form.reportValidity()) return;
   const previousName = employee.name;
   const updatedName = form.elements.fullName.value.trim();
   const updatedDepartment = form.elements.department.value;
@@ -279,6 +317,7 @@ function updateEmployee(event, employee) {
     lastSeen: form.elements.lastSeen.value.trim(),
     reference: form.elements.reference.value
   });
+  saveReferenceImage(form, employee);
 
   [...people, ...absence].filter(record => record.id === employee.id).forEach(record => {
     record.name = updatedName;
@@ -305,19 +344,21 @@ function openEmployeeRegistration() {
         <label><span>Shift</span><select class="field" name="shift" required><option>Morning</option><option>Evening</option><option>Night</option></select></label>
         <label><span>Status</span><select class="field" name="status" required><option>Active</option><option>On leave</option><option>Inactive</option></select></label>
       </div>
-      <label class="reference-upload"><span class="reference-upload__icon">${icon("add_a_photo")}</span><span><strong>AI reference image</strong><small>Upload a clear front-facing employee image for person re-identification.</small></span><input name="referenceImage" type="file" accept="image/png,image/jpeg"><span class="button small">Choose image</span></label>
+      ${referenceImageUpload()}
       <div class="modal-actions"><button class="button primary" type="submit">${icon("person_add")} Register employee</button><button class="button" type="button" id="cancelEmployeeRegistration">Cancel</button></div>
     </form>
   </div>`;
   $("#modalBackdrop").hidden = false;
   document.body.style.overflow = "hidden";
   $("#cancelEmployeeRegistration").addEventListener("click", closeModal);
+  bindReferenceImageUpload($("#employeeRegistrationForm"));
   $("#employeeRegistrationForm").addEventListener("submit", registerEmployee);
 }
 
 function registerEmployee(event) {
   event.preventDefault();
   const form = event.currentTarget;
+  if (!form.reportValidity()) return;
   const employeeId = form.elements.employeeId.value.trim().toUpperCase();
   const fullName = form.elements.fullName.value.trim();
 
@@ -338,6 +379,7 @@ function registerEmployee(event) {
     lastSeen: "Not detected",
     movements: 0
   });
+  saveReferenceImage(form, employeeDirectory[0]);
 
   closeModal();
   renderEmployeeManagement();

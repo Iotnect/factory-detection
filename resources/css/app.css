@@ -285,6 +285,9 @@ html:has(.camera-viewer[open]) { overflow:hidden; }
 .reference-upload strong, .reference-upload small { display: block; }
 .reference-upload small { margin-top: 3px; color: var(--muted); font-size: 10px; }
 .reference-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.reference-image-preview { display: block; width: 160px; height: 160px; margin-top: 12px; border: 1px solid var(--line); border-radius: 14px; object-fit: contain; background: var(--surface); }
+.reference-image-preview[hidden] { display: none; }
+.reference-upload small { overflow-wrap: anywhere; }
 
 .report-grid { display: grid; gap: 18px; }
 .report-card { display: grid; grid-template-columns: minmax(260px, 1fr) auto; align-items: center; gap: 24px; }
