@@ -56,6 +56,10 @@
     </main>
 
     <script>
+        document.fonts.load('24px "Material Symbols Rounded"').then(fonts => {
+            if (fonts.length) document.documentElement.classList.add('icons-ready');
+        }).catch(() => {});
+
         const passwordToggle = document.getElementById('passwordToggle');
         const passwordInput = document.getElementById('password');
 
