@@ -10,11 +10,11 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Manrope:wght@600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=swap" rel="stylesheet">
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body data-username="{{ session('demo_username', config('demo.username', 'User')) }}">
+<body data-username="{{ session('demo_username', config('demo.username', 'User')) }}" data-employee-avatar-url="{{ asset('images/employee-avatar.png') }}">
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
       <a class="brand" href="#overview" aria-label="Iotnect dashboard">
-        <span class="brand-mark brand-mark--logo"><img src="{{ asset('images/neovision.png') }}" alt="Neo Vision"></span>
+        <span class="brand-mark brand-mark--logo"><img src="{{ asset('images/neovision-mark.png') }}" alt="Neovision"></span>
         <span><strong>Neovision</strong></span>
       </a>
 
@@ -27,6 +27,7 @@
         <a class="nav-link" href="{{ route('modules.camera-tracking') }}" data-page="camera" aria-label="Camera Tracking"><span class="material-symbols-rounded">videocam</span><span>Camera Tracking</span></a>
         <a class="nav-link" href="{{ route('modules.floorplan-route-tracking') }}" data-page="route" aria-label="Floorplan Route Tracking"><span class="material-symbols-rounded">route</span><span>Route Tracking</span></a>
         <p class="nav-label">Management</p>
+        <a class="nav-link" href="#employees" data-page="employees" aria-label="Employee Management"><span class="material-symbols-rounded">badge</span><span>Employee Management</span></a>
         <a class="nav-link" href="#reports" data-page="reports"><span class="material-symbols-rounded">analytics</span><span>Reports</span></a>
         <a class="nav-link" href="#settings" data-page="settings"><span class="material-symbols-rounded">settings</span><span>Settings</span></a>
       </nav>
@@ -41,7 +42,7 @@
       <form method="POST" action="{{ route('logout') }}">
         @csrf
         <button class="profile-mini" type="submit" title="Log out">
-          <span class="avatar">AN</span>
+          <img class="avatar" src="{{ asset('images/employee-avatar.png') }}" alt="User profile">
           <span><strong>Admin</strong><small>Safety Supervisor</small></span>
           <span class="material-symbols-rounded">logout</span>
         </button>

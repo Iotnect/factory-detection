@@ -20,9 +20,20 @@ const movementRecords = [
   { id:"MOV-1042-04", date:"05 Oct 2026", time:"08:14:22", employee:"Aiman Hakim", employeeId:"EMP-1042", from:"Main Gate", to:"Quality Assurance", camera:"CAM-02", duration:"01:08", confidence:98, event:"Zone transition", status:"Normal" }
 ];
 
+const employeeDirectory = [
+  { id:"EMP-1042", name:"Aiman Hakim", department:"Assembly", role:"Line Operator", shift:"Morning", status:"Active", reference:"Enrolled", joined:"12 Jan 2023", lastSeen:"Assembly Line A", movements:18 },
+  { id:"EMP-2087", name:"Nur Izzati", department:"Packaging", role:"Packing Operator", shift:"Morning", status:"Active", reference:"Enrolled", joined:"03 Apr 2024", lastSeen:"Packing Zone 2", movements:12 },
+  { id:"EMP-3184", name:"Daniel Wong", department:"Machining", role:"CNC Technician", shift:"Morning", status:"Active", reference:"Enrolled", joined:"18 Aug 2022", lastSeen:"CNC Bay 4", movements:9 },
+  { id:"EMP-4019", name:"Siti Aminah", department:"Quality", role:"QA Inspector", shift:"Morning", status:"Active", reference:"Enrolled", joined:"22 Feb 2021", lastSeen:"QA Station 1", movements:14 },
+  { id:"EMP-5331", name:"Raj Kumar", department:"Warehouse", role:"Storekeeper", shift:"Morning", status:"Active", reference:"Enrolled", joined:"09 Nov 2023", lastSeen:"Loading Bay", movements:7 },
+  { id:"EMP-2208", name:"Farah Nadia", department:"Packaging", role:"Packing Operator", shift:"Morning", status:"On leave", reference:"Enrolled", joined:"15 Jun 2024", lastSeen:"Post PK-07", movements:5 },
+  { id:"EMP-3390", name:"Harith Iskandar", department:"Machining", role:"Maintenance Technician", shift:"Evening", status:"Active", reference:"Enrolled", joined:"28 Mar 2022", lastSeen:"Post MC-04", movements:11 },
+  { id:"EMP-4416", name:"Mei Ling", department:"Quality", role:"Quality Engineer", shift:"Evening", status:"Active", reference:"Missing", joined:"01 Sep 2025", lastSeen:"Post QA-02", movements:6 }
+];
+
 const pageMeta = {
   overview:"Command overview", phone:"Phone usage detection", absence:"Post & absence detection",
-  camera:"Camera tracking", route:"Floorplan route tracking", reports:"Reports", settings:"Settings"
+  camera:"Camera tracking", route:"Floorplan route tracking", employees:"Employee management", reports:"Reports", settings:"Settings"
 };
 
 const demoCameras = [
@@ -53,6 +64,7 @@ const $ = (selector, root=document) => root.querySelector(selector);
 const $$ = (selector, root=document) => [...root.querySelectorAll(selector)];
 const app = $("#app");
 const currentUsername = document.body.dataset.username || "User";
+const employeeAvatarUrl = document.body.dataset.employeeAvatarUrl || "/images/employee-avatar.png";
 let currentPage = "overview";
 let toastTimer;
 let cameraLoadController;
@@ -60,10 +72,11 @@ const themeStorageKey = "neovision-theme";
 
 function icon(name) { return `<span class="material-symbols-rounded">${name}</span>`; }
 function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, character => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#039;", '"':"&quot;" })[character]); }
+function employeeAvatar(name, large=false) { return `<img class="${large ? "employee-profile-avatar" : "avatar"}" src="${employeeAvatarUrl}" alt="${escapeHtml(name)} profile">`; }
 function noFootage() { return `<div class="footage-empty">${icon("videocam_off")}<p>No footage available at the moment</p></div>`; }
 function noEvidence() { return `<div class="footage-empty">${icon("image_not_supported")}<p>No evidence shown</p></div>`; }
 function badge(value) {
-  const cls = /critical|unresolved|confirmed|alert|offline/i.test(value) ? "red" : /warning|review/i.test(value) ? "amber" : /resolved|online|normal|active/i.test(value) ? "green" : "";
+  const cls = /critical|unresolved|confirmed|alert|inactive|offline/i.test(value) ? "red" : /warning|review|leave/i.test(value) ? "amber" : /resolved|online|normal|active/i.test(value) ? "green" : "";
   return `<span class="badge ${cls}">${value}</span>`;
 }
 function showToast(message) {
@@ -127,6 +140,208 @@ function monitorCard(page, iconName, title, text, count, suffix) {
 }
 function activity(iconName, name, copy, time, tone) {
   return `<div class="activity-item" data-record="${name}"><span class="activity-icon ${tone}">${icon(iconName)}</span><div><strong>${name}</strong><small>${copy}</small></div><span class="activity-time">${time}</span></div>`;
+}
+
+function renderEmployeeManagement() {
+  const totalEmployees = 240 + employeeDirectory.length;
+  const activeEmployees = 228 + employeeDirectory.filter(employee => employee.status === "Active").length;
+  const employeesOnLeave = 7 + employeeDirectory.filter(employee => employee.status === "On leave").length;
+  const enrolledProfiles = 233 + employeeDirectory.filter(employee => employee.reference === "Enrolled").length;
+
+  app.innerHTML = `<section class="page employee-page">
+    ${pageHead("People & AI identity", "Employee management", "Register employees and manage the identity data used by AI detection and tracking.", `<button class="button primary" id="registerEmployee">${icon("person_add")} Register employee</button>`)}
+    <div class="metric-grid">
+      ${metric("Registered employees", totalEmployees, "badge", "", "+8 this month")}
+      ${metric("Active employees", activeEmployees, "person_check", "good", "Across all shifts")}
+      ${metric("On leave", employeesOnLeave, "event_busy", "warn", "Current records")}
+      ${metric("AI profiles enrolled", enrolledProfiles, "face", "good", `${Math.round((enrolledProfiles / totalEmployees) * 100)}% coverage`)}
+    </div>
+    <section class="panel filter-panel">
+      <div class="panel-head"><div class="panel-title">${icon("manage_search")}<div><h2>Employee directory</h2><p>Search personnel records without loading the full workforce database at once.</p></div></div><span class="result-count" id="employeeResultCount"></span></div>
+      <form class="employee-search-row" id="employeeSearch">
+        <label class="search-field"><span class="material-symbols-rounded">search</span><input class="field" id="employeeQuery" placeholder="Employee name or ID"></label>
+        <select class="field" id="employeeDepartment" aria-label="Department"><option value="">All departments</option>${[...new Set(employeeDirectory.map(employee => employee.department))].sort().map(department => `<option>${department}</option>`).join("")}</select>
+        <select class="field" id="employeeStatus" aria-label="Employment status"><option value="">All statuses</option><option>Active</option><option>On leave</option><option>Inactive</option></select>
+        <select class="field" id="employeeReference" aria-label="AI reference status"><option value="">All AI profiles</option><option>Enrolled</option><option>Missing</option></select>
+        <button class="button primary" type="submit">${icon("search")} Find</button>
+      </form>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2>Personnel records</h2><p>Select an employee to review their profile and movement history.</p></div><button class="button small" id="clearEmployeeFilters">${icon("filter_alt_off")} Clear filters</button></div>
+      <div id="employeeTable"></div>
+    </section>
+  </section>`;
+
+  renderEmployeeTable(employeeDirectory);
+  bindEmployeeFilters();
+  $("#registerEmployee").addEventListener("click", openEmployeeRegistration);
+}
+
+function renderEmployeeTable(records) {
+  const target = $("#employeeTable");
+  $("#employeeResultCount").textContent = `${records.length} displayed record${records.length === 1 ? "" : "s"}`;
+
+  if (!records.length) {
+    target.innerHTML = `<div class="empty-state">${icon("person_search")}<strong>No matching employees</strong><p>Try another name, ID, department, or status.</p></div>`;
+    return;
+  }
+
+  target.innerHTML = `<div class="table-wrap"><table class="employee-table"><thead><tr><th>Employee</th><th>Department</th><th>Position</th><th>Shift</th><th>Status</th><th>AI reference</th><th>Last known area</th><th>Movement records</th><th></th></tr></thead><tbody>
+    ${records.map(employee => `<tr><td><div class="employee">${employeeAvatar(employee.name)}<span><strong>${escapeHtml(employee.name)}</strong><small>${escapeHtml(employee.id)}</small></span></div></td><td>${escapeHtml(employee.department)}</td><td>${escapeHtml(employee.role)}</td><td>${escapeHtml(employee.shift)}</td><td>${badge(employee.status)}</td><td><span class="ai-reference ${employee.reference === "Missing" ? "missing" : ""}">${escapeHtml(employee.reference)}</span></td><td>${escapeHtml(employee.lastSeen)}</td><td><strong>${employee.movements}</strong> <span class="mono">events</span></td><td><button class="button small" data-employee-id="${escapeHtml(employee.id)}">${icon("visibility")} View</button></td></tr>`).join("")}
+  </tbody></table></div>`;
+
+  $$('[data-employee-id]', target).forEach(button => button.addEventListener("click", () => openEmployeeProfile(employeeDirectory.find(employee => employee.id === button.dataset.employeeId))));
+}
+
+function bindEmployeeFilters() {
+  const filterEmployees = () => {
+    const query = $("#employeeQuery").value.trim().toLowerCase();
+    const department = $("#employeeDepartment").value;
+    const status = $("#employeeStatus").value;
+    const reference = $("#employeeReference").value;
+    const records = employeeDirectory.filter(employee =>
+      (!query || `${employee.id} ${employee.name}`.toLowerCase().includes(query)) &&
+      (!department || employee.department === department) &&
+      (!status || employee.status === status) &&
+      (!reference || employee.reference === reference)
+    );
+    renderEmployeeTable(records);
+  };
+
+  $("#employeeSearch").addEventListener("submit", event => { event.preventDefault(); filterEmployees(); });
+  $("#employeeDepartment").addEventListener("change", filterEmployees);
+  $("#employeeStatus").addEventListener("change", filterEmployees);
+  $("#employeeReference").addEventListener("change", filterEmployees);
+  $("#clearEmployeeFilters").addEventListener("click", () => { $("#employeeSearch").reset(); renderEmployeeTable(employeeDirectory); });
+}
+
+function openEmployeeProfile(employee) {
+  if (!employee) return;
+  const employeeMovements = movementRecords.filter(record => record.employeeId === employee.id);
+  $("#modalContent").innerHTML = `<div class="modal-inner employee-profile-modal">
+    <div class="modal-title-row">${employeeAvatar(employee.name, true)}<div><span class="status-label">${escapeHtml(employee.id)}</span><h2 id="modalTitle">${escapeHtml(employee.name)}</h2><p>${escapeHtml(employee.role)} &middot; ${escapeHtml(employee.department)}</p></div></div>
+    <div class="employee-profile-grid">
+      <section class="detail-block"><h3>Employment details</h3><div class="detail-list"><div><small>Status</small><strong>${badge(employee.status)}</strong></div><div><small>Shift</small><strong>${escapeHtml(employee.shift)}</strong></div><div><small>Joined</small><strong>${escapeHtml(employee.joined)}</strong></div><div><small>Last known area</small><strong>${escapeHtml(employee.lastSeen)}</strong></div></div></section>
+      <section class="detail-block"><h3>AI identity profile</h3><div class="ai-profile-summary"><span class="ai-profile-icon">${icon(employee.reference === "Missing" ? "no_accounts" : "face")}</span><div><strong>${escapeHtml(employee.reference)}</strong><small>${employee.reference === "Enrolled" ? "Reference profile available for person re-identification." : "Reference image is required before AI tracking can be enabled."}</small></div></div></section>
+    </div>
+    <section class="employee-history"><div class="panel-head"><div><h2>Movement history</h2><p>Recent AI-inferred movements linked to this employee.</p></div><span class="result-count">${employeeMovements.length} records</span></div>
+      ${employeeMovements.length ? `<div class="table-wrap"><table><thead><tr><th>Date & time</th><th>From</th><th>To</th><th>Camera</th><th>Event</th><th>Confidence</th></tr></thead><tbody>${employeeMovements.map(record => `<tr><td>${escapeHtml(record.date)}<br><span class="mono">${escapeHtml(record.time)}</span></td><td>${escapeHtml(record.from)}</td><td>${escapeHtml(record.to)}</td><td class="mono">${escapeHtml(record.camera)}</td><td>${escapeHtml(record.event)}</td><td>${record.confidence}%</td></tr>`).join("")}</tbody></table></div>` : `<div class="employee-history-empty">${icon("route")}<p>No movement records available for this employee.</p></div>`}
+    </section>
+    <div class="modal-actions"><button class="button primary" data-employee-history="${escapeHtml(employee.id)}">${icon("route")} Open route tracking</button><button class="button" data-employee-edit="${escapeHtml(employee.id)}">${icon("edit")} Edit employee</button></div>
+  </div>`;
+  $("#modalBackdrop").hidden = false;
+  document.body.style.overflow = "hidden";
+  $('[data-employee-history]').addEventListener("click", () => { closeModal(); location.hash = "route"; });
+  $('[data-employee-edit]').addEventListener("click", () => openEmployeeEditor(employee));
+}
+
+function openEmployeeEditor(employee) {
+  if (!employee) return;
+  const departments = ["Assembly", "Machining", "Packaging", "Quality", "Warehouse"];
+  const departmentOptions = [...new Set([...departments, employee.department])];
+
+  $("#modalContent").innerHTML = `<div class="modal-inner employee-registration-modal">
+    <div class="modal-title-row">${employeeAvatar(employee.name, true)}<div><span class="status-label">${escapeHtml(employee.id)}</span><h2 id="modalTitle">Edit employee</h2><p>Update this employee's personnel and AI identity details.</p></div></div>
+    <form id="employeeEditForm" class="employee-form">
+      <div class="employee-form-grid">
+        <label><span>Employee ID</span><input class="field" name="employeeId" value="${escapeHtml(employee.id)}" readonly></label>
+        <label><span>Full name</span><input class="field" name="fullName" value="${escapeHtml(employee.name)}" required></label>
+        <label><span>Department</span><select class="field" name="department" required>${departmentOptions.map(department => `<option${department === employee.department ? " selected" : ""}>${escapeHtml(department)}</option>`).join("")}</select></label>
+        <label><span>Position</span><input class="field" name="role" value="${escapeHtml(employee.role)}" required></label>
+        <label><span>Shift</span><select class="field" name="shift" required>${["Morning", "Evening", "Night"].map(shift => `<option${shift === employee.shift ? " selected" : ""}>${shift}</option>`).join("")}</select></label>
+        <label><span>Status</span><select class="field" name="status" required>${["Active", "On leave", "Inactive"].map(status => `<option${status === employee.status ? " selected" : ""}>${status}</option>`).join("")}</select></label>
+        <label><span>Joined</span><input class="field" name="joined" value="${escapeHtml(employee.joined)}" required></label>
+        <label><span>Last known area</span><input class="field" name="lastSeen" value="${escapeHtml(employee.lastSeen)}" required></label>
+        <label><span>AI reference</span><select class="field" name="reference" required>${["Enrolled", "Missing"].map(reference => `<option${reference === employee.reference ? " selected" : ""}>${reference}</option>`).join("")}</select></label>
+      </div>
+      <div class="modal-actions"><button class="button primary" type="submit">${icon("save")} Save changes</button><button class="button" type="button" id="cancelEmployeeEdit">Cancel</button></div>
+    </form>
+  </div>`;
+
+  $("#cancelEmployeeEdit").addEventListener("click", () => openEmployeeProfile(employee));
+  $("#employeeEditForm").addEventListener("submit", event => updateEmployee(event, employee));
+}
+
+function updateEmployee(event, employee) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const previousName = employee.name;
+  const updatedName = form.elements.fullName.value.trim();
+  const updatedDepartment = form.elements.department.value;
+
+  Object.assign(employee, {
+    name: updatedName,
+    department: updatedDepartment,
+    role: form.elements.role.value.trim(),
+    shift: form.elements.shift.value,
+    status: form.elements.status.value,
+    joined: form.elements.joined.value.trim(),
+    lastSeen: form.elements.lastSeen.value.trim(),
+    reference: form.elements.reference.value
+  });
+
+  [...people, ...absence].filter(record => record.id === employee.id).forEach(record => {
+    record.name = updatedName;
+    record.dept = updatedDepartment;
+  });
+  movementRecords.filter(record => record.employeeId === employee.id).forEach(record => {
+    record.employee = updatedName;
+  });
+
+  renderEmployeeManagement();
+  openEmployeeProfile(employee);
+  showToast(`${previousName} updated successfully`);
+}
+
+function openEmployeeRegistration() {
+  $("#modalContent").innerHTML = `<div class="modal-inner employee-registration-modal">
+    <div class="modal-title-row"><span class="monitor-icon">${icon("person_add")}</span><div><span class="status-label">New personnel record</span><h2 id="modalTitle">Register employee</h2><p>Create an employee profile for detection and tracking workflows.</p></div></div>
+    <form id="employeeRegistrationForm" class="employee-form">
+      <div class="employee-form-grid">
+        <label><span>Employee ID</span><input class="field" name="employeeId" placeholder="EMP-0000" required></label>
+        <label><span>Full name</span><input class="field" name="fullName" placeholder="Employee name" required></label>
+        <label><span>Department</span><select class="field" name="department" required><option value="">Select department</option><option>Assembly</option><option>Machining</option><option>Packaging</option><option>Quality</option><option>Warehouse</option></select></label>
+        <label><span>Position</span><input class="field" name="role" placeholder="Job title" required></label>
+        <label><span>Shift</span><select class="field" name="shift" required><option>Morning</option><option>Evening</option><option>Night</option></select></label>
+        <label><span>Status</span><select class="field" name="status" required><option>Active</option><option>On leave</option><option>Inactive</option></select></label>
+      </div>
+      <label class="reference-upload"><span class="reference-upload__icon">${icon("add_a_photo")}</span><span><strong>AI reference image</strong><small>Upload a clear front-facing employee image for person re-identification.</small></span><input name="referenceImage" type="file" accept="image/png,image/jpeg"><span class="button small">Choose image</span></label>
+      <div class="modal-actions"><button class="button primary" type="submit">${icon("person_add")} Register employee</button><button class="button" type="button" id="cancelEmployeeRegistration">Cancel</button></div>
+    </form>
+  </div>`;
+  $("#modalBackdrop").hidden = false;
+  document.body.style.overflow = "hidden";
+  $("#cancelEmployeeRegistration").addEventListener("click", closeModal);
+  $("#employeeRegistrationForm").addEventListener("submit", registerEmployee);
+}
+
+function registerEmployee(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const employeeId = form.elements.employeeId.value.trim().toUpperCase();
+  const fullName = form.elements.fullName.value.trim();
+
+  if (employeeDirectory.some(employee => employee.id === employeeId)) {
+    showToast("That employee ID is already registered");
+    return;
+  }
+
+  employeeDirectory.unshift({
+    id: employeeId,
+    name: fullName,
+    department: form.elements.department.value,
+    role: form.elements.role.value.trim(),
+    shift: form.elements.shift.value,
+    status: form.elements.status.value,
+    reference: form.elements.referenceImage.files.length ? "Enrolled" : "Missing",
+    joined: new Intl.DateTimeFormat("en-MY", { day:"2-digit", month:"short", year:"numeric" }).format(new Date()),
+    lastSeen: "Not detected",
+    movements: 0
+  });
+
+  closeModal();
+  renderEmployeeManagement();
+  showToast(`${fullName} registered successfully`);
 }
 
 const reportDefinitions = {
@@ -301,7 +516,7 @@ function renderTable(records, type) {
     return;
   }
   target.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Department</th><th>Event</th><th>Location</th><th>Date & time</th>${type === "phone" ? "<th>Confidence</th>" : "<th>Duration</th>"}<th></th></tr></thead><tbody>
-    ${records.map(r => `<tr data-id="${r.id}"><td><div class="employee"><span class="avatar">${r.name.split(" ").map(n=>n[0]).join("").slice(0,2)}</span><span><strong>${r.name}</strong><small>${r.id}</small></span></div></td><td>${r.dept}</td><td>${r.type}</td><td><strong>${r.location}</strong><br><span class="mono">${r.camera}</span></td><td>${r.date}<br><span class="mono">${r.time}</span></td>${type === "phone" ? `<td><span class="confidence"><i style="--score:${r.confidence}%"></i><b>${r.confidence}%</b></span></td>` : `<td class="mono">${r.duration}</td>`}<td>${icon("chevron_right")}</td></tr>`).join("")}
+    ${records.map(r => `<tr data-id="${r.id}"><td><div class="employee">${employeeAvatar(r.name)}<span><strong>${r.name}</strong><small>${r.id}</small></span></div></td><td>${r.dept}</td><td>${r.type}</td><td><strong>${r.location}</strong><br><span class="mono">${r.camera}</span></td><td>${r.date}<br><span class="mono">${r.time}</span></td>${type === "phone" ? `<td><span class="confidence"><i style="--score:${r.confidence}%"></i><b>${r.confidence}%</b></span></td>` : `<td class="mono">${r.duration}</td>`}<td>${icon("chevron_right")}</td></tr>`).join("")}
   </tbody></table></div>`;
   $$('tbody tr', target).forEach(row => row.addEventListener('click', () => openIncident([...people, ...absence].find(r => r.id === row.dataset.id))));
 }
@@ -515,7 +730,7 @@ function renderRoute() {
           </svg><div class="map-controls"><button class="icon-button" data-toast="Map zoomed in">${icon("add")}</button><button class="icon-button" data-toast="Map zoomed out">${icon("remove")}</button><button class="icon-button" data-toast="Map view reset">${icon("my_location")}</button></div>
         </div><div class="playback"><button class="icon-button" id="routePlay">${icon("play_arrow")}</button><span class="mono">07:03</span><input id="routeRange" type="range" min="0" max="100" value="68"><span class="mono" id="routeTime">10:42</span><select class="field" style="width:80px;min-height:36px"><option>1&times;</option><option>2&times;</option><option>4&times;</option></select></div>
       </section>
-      <aside class="panel"><div class="employee" style="margin-bottom:18px"><span class="avatar">AH</span><span><strong>Aiman Hakim</strong><small>EMP-1042 &middot; Assembly</small></span>${badge("On site")}</div>
+      <aside class="panel"><div class="employee" style="margin-bottom:18px">${employeeAvatar("Aiman Hakim")}<span><strong>Aiman Hakim</strong><small>EMP-1042 &middot; Assembly</small></span>${badge("On site")}</div>
         <div class="metric-grid" style="grid-template-columns:1fr 1fr"><div class="detail-block"><small>Distance</small><strong>1.84 km</strong></div><div class="detail-block"><small>Zones</small><strong>6</strong></div><div class="detail-block"><small>Stops</small><strong>4</strong></div><div class="detail-block"><small>Alerts</small><strong style="color:var(--red)">1</strong></div></div>
         <div class="panel-head"><div><h2>Route checkpoints</h2><p>Select a point to inspect evidence</p></div></div><div class="route-timeline">
           ${routeEvent("10:42", "Assembly Line A", "Current position &middot; CAM-04")}${routeEvent("10:17", "Restricted Storage", "Unauthorized boundary crossing")}${routeEvent("09:36", "East Corridor", "Stopped for 6m 12s")}${routeEvent("08:14", "Quality Assurance", "Checkpoint passed")}${routeEvent("07:03", "Main Gate", "Route started")}
@@ -535,7 +750,7 @@ function renderMovementRecords() {
   return `<section class="panel movement-records">
     <div class="panel-head"><div class="panel-title">${icon("directions_walk")}<div><h2>Employee movement records</h2><p>AI-inferred movements generated from CCTV detections and re-identification.</p></div></div><div class="movement-record-actions"><span class="result-count">${movementRecords.length} records</span><button class="button small" data-action="export">${icon("download")} Export</button></div></div>
     <div class="table-wrap"><table><thead><tr><th>Timestamp</th><th>Employee</th><th>Movement</th><th>Camera</th><th>Dwell / travel</th><th>AI confidence</th><th>Event</th><th>Status</th><th>Evidence</th></tr></thead><tbody>
-      ${movementRecords.map(record => `<tr><td><strong>${record.time}</strong><br><span class="mono">${record.date}</span></td><td><div class="employee"><span class="avatar">AH</span><span><strong>${record.employee}</strong><small>${record.employeeId}</small></span></div></td><td><div class="movement-path"><span>${record.from}</span>${icon("arrow_forward")}<strong>${record.to}</strong></div></td><td class="mono">${record.camera}</td><td class="mono">${record.duration}</td><td><span class="confidence"><i style="--score:${record.confidence}%"></i><b>${record.confidence}%</b></span></td><td>${record.event}</td><td>${badge(record.status)}</td><td><button class="button small evidence-button" data-movement-id="${record.id}">${icon("smart_display")} View</button></td></tr>`).join("")}
+      ${movementRecords.map(record => `<tr><td><strong>${record.time}</strong><br><span class="mono">${record.date}</span></td><td><div class="employee">${employeeAvatar(record.employee)}<span><strong>${record.employee}</strong><small>${record.employeeId}</small></span></div></td><td><div class="movement-path"><span>${record.from}</span>${icon("arrow_forward")}<strong>${record.to}</strong></div></td><td class="mono">${record.camera}</td><td class="mono">${record.duration}</td><td><span class="confidence"><i style="--score:${record.confidence}%"></i><b>${record.confidence}%</b></span></td><td>${record.event}</td><td>${badge(record.status)}</td><td><button class="button small evidence-button" data-movement-id="${record.id}">${icon("smart_display")} View</button></td></tr>`).join("")}
     </tbody></table></div>
   </section>`;
 }
@@ -578,6 +793,7 @@ function navigate(page) {
   if (currentPage === "phone" || currentPage === "absence") renderDetection(currentPage);
   if (currentPage === "camera") renderCamera();
   if (currentPage === "route") renderRoute();
+  if (currentPage === "employees") renderEmployeeManagement();
   if (currentPage === "reports") renderReports();
   if (currentPage === "settings") renderSettings();
   $("#sidebar").classList.remove("open");
